@@ -14,27 +14,6 @@ Mojis CLI is a command-line interface for working with emojis.
 npm install @mojis/cli
 ```
 
-## 🚀 Usage
-
-```ts
-import { getSkinTone, hasSkinTone, setSkinTone, setSkinTones } from "@mojis/skin-tone";
-
-console.log(setSkinTone("👍", "dark")); // -> 👍🏿
-console.log(setSkinTone("👍", "light")); // -> 👍🏻
-console.log(setSkinTone("👍🏻", "none")); // -> 👍
-
-console.log(setSkinTones("👩‍❤️‍👨", ["light", "dark"])); // -> 👩🏻‍❤‍👨🏿
-
-console.log(getSkinTone("👍🏿")); // -> dark
-console.log(getSkinTone("👍🏻")); // -> light
-console.log(getSkinTone("👍")); // -> none
-console.log(getSkinTone("👩🏼‍❤️‍👨🏿")); // -> ["medium-light", "dark"]
-
-console.log(hasSkinTone("👍🏿")); // -> dark
-console.log(hasSkinTone("👍🏻")); // -> light
-console.log(hasSkinTone("👍")); // -> none
-```
-
 ## 📄 License
 
 Published under [MIT License](./LICENSE).
