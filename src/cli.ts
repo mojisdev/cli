@@ -27,7 +27,7 @@ cli.command(
     })
     .strict().help(),
   async (args) => {
-    const force = args.force ?? false;
+    const _force = args.force ?? false;
     const versions = Array.isArray(args.versions) ? args.versions : [args.versions];
 
     if (SUPPORTED_EMOJI_VERSIONS.every((v) => !versions.includes(v))) {
