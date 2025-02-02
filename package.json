@@ -10,12 +10,15 @@
   "packageManager": "pnpm@9.15.4",
   "license": "MIT",
   "homepage": "https://github.com/mojisdev/cli",
-  "repository": "https://github.com/mojisdev/cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mojisdev/cli.git"
+  },
   "bugs": {
     "url": "https://github.com/mojisdev/cli/issues"
   },
   "bin": {
-    "mojis": "./bin/mojis.mjs"
+    "mojis": "bin/mojis.mjs"
   },
   "scripts": {
     "build": "tsup",
