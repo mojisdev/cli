@@ -20,6 +20,10 @@
   "bin": {
     "mojis": "bin/mojis.mjs"
   },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsx ./src/cli.ts",
