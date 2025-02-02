@@ -2,7 +2,7 @@ import process from "node:process";
 import { green, red, yellow } from "farver/fast";
 import fs from "fs-extra";
 import yargs, { type Argv } from "yargs";
-import { version } from "../package.json" with { type: "json" };
+import pkg from "../package.json" with { type: "json" };
 import { fetchCache } from "./cache";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
 import { getGroups } from "./groups";
@@ -10,7 +10,7 @@ import { getGroups } from "./groups";
 const cli = yargs(process.argv.slice(2))
   .scriptName("mojis")
   .usage("$0 [args]")
-  .version(version)
+  .version(pkg.version ?? "0.0.0")
   .strict()
   .showHelpOnFail(true)
   .alias("h", "help")
