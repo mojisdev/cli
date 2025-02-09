@@ -1,3 +1,4 @@
+import type { EmojiVersion } from "./lockfile";
 import semver from "semver";
 import { NO_EMOJI_VERSIONS } from "./constants";
 
@@ -37,10 +38,10 @@ export function slugify(val: string): string {
  * 4. Normalizes version numbers to valid semver format
  *
  * @throws {Error} When either the root or emoji page fetch fails
- * @returns {Promise<string[]>} A promise that resolves to an array of emoji versions,
+ * @returns {Promise<EmojiVersion[]>} A promise that resolves to an array of emoji versions,
  *                             sorted according to semver rules
  */
-export async function getAllEmojiVersions(): Promise<string[]> {
+export async function getAllEmojiVersions(): Promise<EmojiVersion[]> {
   const [rootResult, emojiResult] = await Promise.allSettled([
     "https://unicode.org/Public/",
     "https://unicode.org/Public/emoji/",
@@ -72,7 +73,9 @@ export async function getAllEmojiVersions(): Promise<string[]> {
 
   const versionRegex = /href="(\d+\.\d+(?:\.\d+)?)\/?"/g;
 
-  const versions = new Set<string>();
+  const draft = await getCurrentDraftVersion();
+
+  const versions: EmojiVersion[] = [];
 
   for (const match of rootHtml.matchAll(versionRegex)) {
     if (match == null || match[1] == null) continue;
@@ -83,7 +86,15 @@ export async function getAllEmojiVersions(): Promise<string[]> {
       continue;
     }
 
-    versions.add(version);
+    if (versions.some((v) => v.unicode_version === version)) {
+      continue;
+    }
+
+    versions.push({
+      emoji_version: null,
+      unicode_version: version,
+      draft: version === draft,
+    });
   }
 
   for (const match of emojiHtml.matchAll(versionRegex)) {
@@ -91,7 +102,7 @@ export async function getAllEmojiVersions(): Promise<string[]> {
 
     let version = match[1];
 
-    // for this emoji page, the versions is not valid semver.
+    // for the emoji page, the versions is not valid semver.
     // so we will add the last 0 to the version.
     // handle both 5.0 and 12.0 -> 5.0.0 and 12.0.0
     if (version.length === 3 || version.length === 4) {
@@ -102,10 +113,36 @@ export async function getAllEmojiVersions(): Promise<string[]> {
       continue;
     }
 
-    versions.add(version);
+    // check if the unicode_version already exists.
+    // if it does, we will update the emoji version.
+    const existing = versions.find((v) => v.unicode_version === version);
+
+    if (existing) {
+      existing.emoji_version = match[1];
+      continue;
+    }
+
+    versions.push({
+      emoji_version: match[1],
+      unicode_version: null,
+      draft: version === draft,
+    });
   }
 
-  return Array.from(versions).sort(semver.compare);
+  return versions.sort((a, b) => {
+    // if unicode version is null, it means it is from the emoji page.
+    // which contains emoji versions, in major.minor format.
+    // so, we will add the last 0 to the version, to be able to compare them.
+    if (a.unicode_version == null) {
+      a.unicode_version = `${a.emoji_version}.0`;
+    }
+
+    if (b.unicode_version == null) {
+      b.unicode_version = `${b.emoji_version}.0`;
+    }
+
+    return semver.compare(b.unicode_version, a.unicode_version);
+  });
 }
 
 /**
@@ -142,4 +179,71 @@ export async function isEmojiVersionValid(version: string): Promise<boolean> {
   }
 
   return true;
+}
+
+export async function getCurrentDraftVersion(): Promise<string | null> {
+  const [rootResult, emojiResult] = await Promise.allSettled([
+    "https://unicode.org/Public/draft/ReadMe.txt",
+    "https://unicode.org/Public/draft/emoji/ReadMe.txt",
+  ].map(async (url) => {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      throw new Error(`failed to fetch ${url}: ${res.statusText}`);
+    }
+
+    return res.text();
+  }));
+
+  if (rootResult == null || emojiResult == null) {
+    throw new Error("failed to fetch draft readme or draft emoji readme");
+  }
+
+  if (rootResult.status === "rejected" || emojiResult.status === "rejected") {
+    console.error({
+      root: rootResult.status === "rejected" ? rootResult.reason : "ok",
+      emoji: emojiResult.status === "rejected" ? emojiResult.reason : "ok",
+    });
+
+    throw new Error("failed to fetch draft readme or draft emoji readme");
+  }
+
+  const draftText = rootResult.value;
+  const emojiText = emojiResult.value;
+
+  const rootVersion = extractVersion(draftText);
+  const emojiVersion = extractVersion(emojiText);
+
+  if (rootVersion == null || emojiVersion == null) {
+    throw new Error("failed to extract draft version");
+  }
+
+  // the emoji version is only using major.minor format.
+  // so, we will need to add the last 0 to the version.
+
+  // if they don't match the major and minor version, we will throw an error.
+  if (semver.major(rootVersion) !== semver.major(`${emojiVersion}.0`) || semver.minor(rootVersion) !== semver.minor(`${emojiVersion}.0`)) {
+    throw new Error("draft versions do not match");
+  }
+
+  return rootVersion;
+}
+
+function extractVersion(text: string): string | null {
+  const patterns = [
+    /Version (\d+\.\d+(?:\.\d+)?) of the Unicode Standard/, // Most explicit
+    /Unicode(\d+\.\d+(?:\.\d+)?)/, // From URLs
+    /Version (\d+\.\d+)(?!\.\d)/, // Bare major.minor format
+    /Unicode Emoji, Version (\d+\.\d+(?:\.\d+)?)/, // Emoji-specific version
+  ];
+
+  for (const pattern of patterns) {
+    const match = text.match(pattern);
+
+    if (match == null || match[1] == null) continue;
+
+    return match[1];
+  }
+
+  return null;
 }
