@@ -14,3 +14,5 @@ export const SUPPORTED_EMOJI_VERSIONS = [
   "15.1",
   "16.0",
 ];
+
+export const NO_EMOJI_VERSIONS = ["6.x", "7.x", "8.x", "9.x", "10.x"];

@@ -36,12 +36,14 @@
     "cac": "^6.7.14",
     "farver": "^0.4.0",
     "fs-extra": "^11.3.0",
+    "semver": "^7.7.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
     "@luxass/eslint-config": "^4.15.0",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.10.10",
+    "@types/semver": "^7.5.8",
     "@types/yargs": "^17.0.33",
     "eslint": "^9.19.0",
     "eslint-plugin-format": "^1.0.1",
