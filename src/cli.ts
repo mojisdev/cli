@@ -6,6 +6,7 @@ import pkg from "../package.json" with { type: "json" };
 import { fetchCache } from "./cache";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
 import { getGroups } from "./groups";
+import { readLockfile, writeLockfile } from "./lockfile";
 import { getAllEmojiVersions } from "./utils";
 
 const cli = yargs(process.argv.slice(2))
@@ -91,25 +92,54 @@ cli.command(
 cli.command(
   "versions:check",
   "Check for the latest emoji versions",
-  (args) => commonOptions(args).strict().help(),
-  async () => {
+  (args) => commonOptions(args)
+    .option("write-lockfile", {
+      type: "boolean",
+      default: false,
+      description: "write the latest version to the lockfile",
+    })
+    .strict().help(),
+  async (args) => {
     const versions = await getAllEmojiVersions();
 
     const latest = versions[0];
 
     console.log("latest emoji version:", yellow(latest));
+
+    if (args.writeLockfile) {
+      const lockfile = await readLockfile();
+
+      lockfile.latestVersion = latest;
+
+      await writeLockfile(lockfile);
+      console.log(`updated ${yellow("emojis.lock")}`);
+    }
   },
 );
 
 cli.command(
   "versions",
   "Print all emoji versions available",
-  (args) => commonOptions(args).strict().help(),
-  async () => {
+  (args) => commonOptions(args)
+    .option("write-lockfile", {
+      type: "boolean",
+      default: false,
+      description: "write the latest version to the lockfile",
+    }).strict().help(),
+  async (args) => {
     const versions = await getAllEmojiVersions();
 
     console.log("all available versions:");
     console.log(versions.map((v) => yellow(v)).join(", "));
+
+    if (args.writeLockfile) {
+      const lockfile = await readLockfile();
+
+      lockfile.versions = Array.from(versions);
+
+      await writeLockfile(lockfile);
+      console.log(`updated ${yellow("emojis.lock")}`);
+    }
   },
 );
 
