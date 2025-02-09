@@ -90,7 +90,7 @@ cli.command(
 );
 
 cli.command(
-  "versions:check",
+  "versions:latest",
   "Check for the latest emoji versions",
   (args) => commonOptions(args)
     .option("write-lockfile", {
@@ -124,7 +124,7 @@ cli.command(
     .option("write-lockfile", {
       type: "boolean",
       default: false,
-      description: "write the latest version to the lockfile",
+      description: "update the lockfile with the available versions",
     }).strict().help(),
   async (args) => {
     const versions = await getAllEmojiVersions();
