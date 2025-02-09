@@ -28,7 +28,13 @@ export async function readLockfile(): Promise<EmojiLockfile> {
 }
 
 export async function writeLockfile(lockfile: EmojiLockfile): Promise<void> {
-  await fs.writeJSON("emojis.lock", lockfile, { spaces: 2 });
+  const result = await v.safeParseAsync(LOCKFILE_SCHEMA, lockfile);
+
+  if (result.success === false) {
+    throw new Error(`invalid lockfile: ${result.issues.join(", ")}`);
+  }
+
+  await fs.writeJSON("emojis.lock", result.output, { spaces: 2 });
 }
 
 export async function hasLockfile(): Promise<boolean> {
