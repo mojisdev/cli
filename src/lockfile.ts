@@ -1,9 +1,17 @@
 import fs from "fs-extra";
 import * as v from "valibot";
 
+const EMOJI_VERSION_SCHEMA = v.object({
+  emoji_version: v.nullable(v.string()),
+  unicode_version: v.nullable(v.string()),
+  draft: v.boolean(),
+});
+
+export type EmojiVersion = v.InferInput<typeof EMOJI_VERSION_SCHEMA>;
+
 const LOCKFILE_SCHEMA = v.object({
   latestVersion: v.optional(v.nullable(v.string())),
-  versions: v.array(v.string()),
+  versions: v.array(EMOJI_VERSION_SCHEMA),
 });
 
 export type EmojiLockfile = v.InferInput<typeof LOCKFILE_SCHEMA>;
