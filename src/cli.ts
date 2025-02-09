@@ -104,12 +104,12 @@ cli.command(
 
     const latest = versions[0];
 
-    console.log("latest emoji version:", yellow(latest));
+    console.log("latest emoji version:", yellow(latest?.emoji_version));
 
     if (args.writeLockfile) {
       const lockfile = await readLockfile();
 
-      lockfile.latestVersion = latest;
+      lockfile.latestVersion = latest?.emoji_version;
 
       await writeLockfile(lockfile);
       console.log(`updated ${yellow("emojis.lock")}`);
@@ -130,7 +130,7 @@ cli.command(
     const versions = await getAllEmojiVersions();
 
     console.log("all available versions:");
-    console.log(versions.map((v) => yellow(v)).join(", "));
+    console.log(versions.map((v) => `${yellow(v.emoji_version)}${v.draft ? ` ${red("(draft)")}` : ""}`).join(", "));
 
     if (args.writeLockfile) {
       const lockfile = await readLockfile();
