@@ -6,6 +6,7 @@ import pkg from "../package.json" with { type: "json" };
 import { fetchCache } from "./cache";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
 import { getGroups } from "./groups";
+import { getAllEmojiVersions } from "./utils";
 
 const cli = yargs(process.argv.slice(2))
   .scriptName("mojis")
@@ -84,6 +85,31 @@ cli.command(
     }
 
     console.log(green("done"));
+  },
+);
+
+cli.command(
+  "versions:check",
+  "Check for the latest emoji versions",
+  (args) => commonOptions(args).strict().help(),
+  async () => {
+    const versions = await getAllEmojiVersions();
+
+    const latest = versions[0];
+
+    console.log("latest emoji version:", yellow(latest));
+  },
+);
+
+cli.command(
+  "versions",
+  "Print all emoji versions available",
+  (args) => commonOptions(args).strict().help(),
+  async () => {
+    const versions = await getAllEmojiVersions();
+
+    console.log("all available versions:");
+    console.log(versions.map((v) => yellow(v)).join(", "));
   },
 );
 
