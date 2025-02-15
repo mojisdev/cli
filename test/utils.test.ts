@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { slugify } from "../src/utils";
+import { isEmojiVersionValid, slugify } from "../src/utils";
 
 describe("slugify", () => {
   it("should convert string to slug format", () => {

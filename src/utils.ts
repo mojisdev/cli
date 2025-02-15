@@ -172,6 +172,21 @@ export async function isEmojiVersionValid(version: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Retrieves the current Unicode draft version by fetching and comparing root and emoji ReadMe files.
+ *
+ * This function fetches two ReadMe files from unicode.org:
+ * - The main draft ReadMe
+ * - The emoji draft ReadMe
+ *
+ * It then extracts and validates the version numbers from both files to ensure they match.
+ * The emoji version uses major.minor format while the root version uses major.minor.patch.
+ *
+ * @returns A Promise that resolves to the current draft version string, or null if not found
+ * @throws {Error} If either fetch fails
+ * @throws {Error} If version extraction fails
+ * @throws {Error} If versions between root and emoji drafts don't match
+ */
 export async function getCurrentDraftVersion(): Promise<string | null> {
   const [rootResult, emojiResult] = await Promise.allSettled([
     "https://unicode.org/Public/draft/ReadMe.txt",
@@ -220,7 +235,20 @@ export async function getCurrentDraftVersion(): Promise<string | null> {
   return rootVersion;
 }
 
-function extractVersion(text: string): string | null {
+/**
+ * Extracts the Unicode version number from a given text string.
+ *
+ * @param {string} text - The text to extract the version number from
+ * @returns {string | null} The extracted version number as a string, or null if no version number is found
+ *
+ * @example
+ * ```ts
+ * extractVersion("Version 15.0.0 of the Unicode Standard") // Returns "15.0.0"
+ * extractVersion("Unicode15.1") // Returns "15.1"
+ * extractVersion("No version here") // Returns null
+ * ```
+ */
+export function extractVersion(text: string): string | null {
   const patterns = [
     /Version (\d+\.\d+(?:\.\d+)?) of the Unicode Standard/, // Most explicit
     /Unicode(\d+\.\d+(?:\.\d+)?)/, // From URLs
