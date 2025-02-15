@@ -1,11 +1,13 @@
 import type { EmojiGroup } from "../types";
+import { red } from "farver/fast";
 import { defineMojiAdapter } from "../adapter";
 import { slugify } from "../utils";
 import { fetchCache } from "../utils/cache";
+import { MojisNotImplemented } from "../utils/errors";
 
 function notImplemented(adapterFn: string) {
   return async () => {
-    throw new Error(`the adapter function ${adapterFn} is not implemented`);
+    throw new MojisNotImplemented(`the adapter function ${red(adapterFn)} is not implemented`);
   };
 }
 
@@ -63,4 +65,6 @@ export default defineMojiAdapter({
     return groups;
   },
   sequences: notImplemented("sequences"),
+  emojis: notImplemented("emojis"),
+  variations: notImplemented("variations"),
 });

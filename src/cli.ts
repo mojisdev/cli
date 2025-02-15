@@ -7,6 +7,7 @@ import pkg from "../package.json" with { type: "json" };
 import { resolveAdapter } from "./adapters";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
 import { getAllEmojiVersions } from "./utils";
+import { isNotImplementedError } from "./utils/errors";
 import { readLockfile, writeLockfile } from "./utils/lockfile";
 
 const cli = yargs(process.argv.slice(2))
@@ -18,6 +19,126 @@ const cli = yargs(process.argv.slice(2))
   .alias("h", "help")
   .alias("v", "version")
   .demandCommand(1, "");
+
+cli.command(
+  "generate:emojis <versions...>",
+  "Generate emoji data for the specified versions",
+  (args) => commonOptions(args)
+    .positional("versions", {
+      type: "string",
+      description: "emoji versions to generate",
+    })
+    .strict().help(),
+  async (args) => {
+    const force = args.force ?? false;
+    const versions = Array.isArray(args.versions) ? args.versions : [args.versions];
+
+    if (SUPPORTED_EMOJI_VERSIONS.every((v) => !versions.includes(v))) {
+      console.error(red("error:"), "unsupported emoji versions");
+      console.log("supported versions:", SUPPORTED_EMOJI_VERSIONS.join(", "));
+      process.exit(1);
+    }
+
+    console.log("generating emoji data for versions", versions.map((v) => yellow(v)).join(", "));
+
+    const promises = versions.map(async (version) => {
+      const coerced = semver.coerce(version);
+
+      if (coerced == null) {
+        throw new Error(`invalid version ${version}`);
+      }
+
+      const adapter = resolveAdapter(coerced.version);
+
+      if (adapter == null) {
+        throw new Error(`no adapter found for version ${version}`);
+      }
+
+      const emojis = await adapter.emojis!({ version, force });
+
+      await fs.ensureDir(`./data/v${version}`);
+      return fs.writeFile(
+        `./data/v${version}/emojis.json`,
+        JSON.stringify(emojis, null, 2),
+        "utf-8",
+      );
+    });
+
+    const results = await Promise.allSettled(promises);
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        if (isNotImplementedError(result.reason)) {
+          console.warn(yellow("warning:"), result.reason.message);
+          continue;
+        }
+        console.error(red("error:"), result.reason);
+      }
+    }
+
+    console.log(green("done"));
+  },
+);
+
+cli.command(
+  "generate:variations <versions...>",
+  "Generate emoji variations for the specified versions",
+  (args) => commonOptions(args)
+    .positional("versions", {
+      type: "string",
+      description: "emoji versions to generate",
+    })
+    .strict().help(),
+  async (args) => {
+    const force = args.force ?? false;
+    const versions = Array.isArray(args.versions) ? args.versions : [args.versions];
+
+    if (SUPPORTED_EMOJI_VERSIONS.every((v) => !versions.includes(v))) {
+      console.error(red("error:"), "unsupported emoji versions");
+      console.log("supported versions:", SUPPORTED_EMOJI_VERSIONS.join(", "));
+      process.exit(1);
+    }
+
+    console.log("generating emoji variations for versions", versions.map((v) => yellow(v)).join(", "));
+
+    const promises = versions.map(async (version) => {
+      const coerced = semver.coerce(version);
+
+      if (coerced == null) {
+        throw new Error(`invalid version ${version}`);
+      }
+
+      const adapter = resolveAdapter(coerced.version);
+
+      if (adapter == null) {
+        throw new Error(`no adapter found for version ${version}`);
+      }
+
+      const variations = await adapter.variations!({ version, force });
+
+      await fs.ensureDir(`./data/v${version}`);
+      return fs.writeFile(
+        `./data/v${version}/variations.json`,
+        JSON.stringify(variations, null, 2),
+        "utf-8",
+      );
+    });
+
+    const results = await Promise.allSettled(promises);
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        if (isNotImplementedError(result.reason)) {
+          console.warn(yellow("warning:"), result.reason.message);
+          continue;
+        }
+        console.error(red("error:"), result.reason);
+      }
+    }
+
+    console.log(green("done"));
+  },
+);
 
 cli.command(
   "generate:sequences <versions...>",
