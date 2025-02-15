@@ -1,13 +1,9 @@
 import semver from "semver";
 import { ADAPTERS, type MojiAdapter } from "./adapter";
 
-// base needs to be imported before
-// the other adapters to ensure it is
-// registered first
-import "./adapter/base";
-
 import "./adapter/v16";
 import "./adapter/v15";
+import "./adapter/base";
 
 export function resolveAdapter(version: string): MojiAdapter | null {
   if (semver.valid(version) === null) {
@@ -28,15 +24,58 @@ export function resolveAdapter(version: string): MojiAdapter | null {
       const currentLower = semver.minVersion(current.range);
 
       if (!selectedLower || !currentLower) {
-        return selected;
+        if (selected.extend == null) {
+          return selected;
+        }
+
+        const parent = ADAPTERS.get(selected.extend);
+
+        if (parent == null) {
+          throw new Error(`adapter ${selected.name} extends ${selected.extend}, but ${selected.extend} is not registered`);
+        }
+
+        return {
+          ...parent,
+          ...selected,
+        };
       }
 
-      return semver.gt(currentLower, selectedLower) ? current : selected;
+      const adapter = semver.gt(currentLower, selectedLower) ? current : selected;
+
+      if (adapter.extend == null) {
+        return adapter;
+      }
+
+      const parent = ADAPTERS.get(adapter.extend);
+
+      if (parent == null) {
+        throw new Error(`adapter ${adapter.name} extends ${adapter.extend}, but ${adapter.extend} is not registered`);
+      }
+
+      return {
+        ...parent,
+        ...adapter,
+      };
     });
   }
 
-  if (matchingAdapters.length === 1) {
-    return matchingAdapters[0]!;
+  if (matchingAdapters.length === 1 && matchingAdapters[0] != null) {
+    const adapter = matchingAdapters[0];
+
+    if (adapter.extend == null) {
+      return adapter;
+    }
+
+    const parent = ADAPTERS.get(adapter.extend);
+
+    if (parent == null) {
+      throw new Error(`adapter ${adapter.name} extends ${adapter.extend}, but ${adapter.extend} is not registered`);
+    }
+
+    return {
+      ...parent,
+      ...adapter,
+    };
   }
 
   return null;

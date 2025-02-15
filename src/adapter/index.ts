@@ -60,24 +60,10 @@ export function defineMojiAdapter(adapter: MojiAdapter): MojiAdapter {
   }
 
   if (adapter.extend == null) {
-    // TODO: throw error if adapter has missing generator fns
-
-    ADAPTERS.set(adapter.name, adapter);
-    return adapter;
+    // TODO: ensure the adapter has the required functions, when not extending.
   }
 
-  const parent = ADAPTERS.get(adapter.extend);
+  ADAPTERS.set(adapter.name, adapter);
 
-  if (parent == null) {
-    throw new Error(`adapter.extend "${adapter.extend}" not found`);
-  }
-
-  const mergedAdapter = {
-    ...parent,
-    ...adapter,
-  };
-
-  ADAPTERS.set(mergedAdapter.name, mergedAdapter);
-
-  return mergedAdapter;
+  return adapter;
 }
