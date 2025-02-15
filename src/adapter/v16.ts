@@ -1,4 +1,4 @@
-import type { EmojiSequence } from "../types";
+import type { EmojiSequence, EmojiVariation } from "../types";
 import { defineMojiAdapter } from "../adapter";
 import { FEMALE_SIGN, MALE_SIGN } from "../constants";
 import { fetchCache } from "../utils/cache";
@@ -67,5 +67,53 @@ export default defineMojiAdapter({
       sequences: sequences || [],
       zwj: zwj || [],
     };
+  },
+  async emojis({ version, force }) {
+  },
+  variations: async (ctx) => {
+    return fetchCache(`https://unicode.org/Public/${ctx.version}.0/ucd/emoji/emoji-variation-sequences.txt`, {
+      cacheKey: `v${ctx.version}/variations.json`,
+      parser(data) {
+        const lines = data.split("\n");
+
+        const variations: EmojiVariation[] = [];
+
+        for (let line of lines) {
+          // skip empty line & comments
+          if (line.trim() === "" || line.startsWith("#")) {
+            continue;
+          }
+
+          // remove line comment
+          const commentIndex = line.indexOf("#");
+          if (commentIndex !== -1) {
+            line = line.slice(0, commentIndex).trim();
+          }
+
+          const [hex, style] = line.split(";").map((col) => col.trim()).slice(0, 4);
+
+          if (hex == null || style == null) {
+            throw new Error(`invalid line: ${line}`);
+          }
+
+          const hexcode = hex.replace(/\s+/g, "-");
+
+          const type = style.replace("style", "").trim();
+
+          if (type !== "text" && type !== "emoji") {
+            throw new Error(`invalid style: ${style}`);
+          }
+
+          variations.push({
+            emoji: type === "emoji" ? hexcode : null,
+            text: type === "text" ? hexcode : null,
+            property: ["Emoji"],
+          });
+        }
+
+        return variations;
+      },
+      bypassCache: ctx.force,
+    });
   },
 });
