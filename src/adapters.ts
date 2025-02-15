@@ -3,6 +3,13 @@ import { ADAPTERS, type MojiAdapter } from "./adapter";
 
 import "./adapter/v16";
 import "./adapter/v15";
+import "./adapter/v14";
+import "./adapter/v13";
+import "./adapter/v12";
+import "./adapter/v11";
+import "./adapter/v4-5";
+import "./adapter/v2-3";
+import "./adapter/v1";
 import "./adapter/base";
 
 export function resolveAdapter(version: string): MojiAdapter | null {

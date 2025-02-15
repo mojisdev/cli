@@ -27,6 +27,9 @@ export interface MojiAdapter {
    */
   groups?: GroupFn;
 
+  /**
+   * A function to generate the emoji sequences for the specified version
+   */
   sequences?: SequenceFn;
 }
 
