@@ -16,3 +16,6 @@ export const SUPPORTED_EMOJI_VERSIONS = [
 ];
 
 export const NO_EMOJI_VERSIONS = ["6.x", "7.x", "8.x", "9.x", "10.x"];
+
+export const FEMALE_SIGN = "2640"; // FEMALE SIGN
+export const MALE_SIGN = "2642"; // MALE SIGN

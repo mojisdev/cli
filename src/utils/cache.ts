@@ -6,6 +6,14 @@ const CACHE_FOLDER = path.resolve(process.cwd(), ".cache");
 
 const LOCAL_CACHE: Record<string, unknown> = {};
 
+/**
+ * Writes data to a cache file.
+ *
+ * @param {string} name - The name/path of the cache file to write to
+ * @param {T} data - The data to write to the cache file
+ * @template T - The type of data being cached
+ * @returns {Promise<T>} A promise that resolves with the cached data
+ */
 export async function writeCache<T>(name: string, data: T): Promise<T> {
   const filePath = path.join(CACHE_FOLDER, name);
   // create directory if it doesn't exist
@@ -16,6 +24,13 @@ export async function writeCache<T>(name: string, data: T): Promise<T> {
   return data;
 }
 
+/**
+ * Reads and parses JSON data from a cache file.
+ *
+ * @param {string} name - The name of the cache file to read
+ * @template T - The type of data stored in the cache file
+ * @returns {Promise<T>} A promise that resolves to the parsed cache data of type T, or undefined if the file doesn't exist
+ */
 export async function readCache<T>(name: string): Promise<T | undefined> {
   const filePath = path.join(CACHE_FOLDER, name);
 

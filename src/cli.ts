@@ -1,13 +1,13 @@
 import process from "node:process";
 import { green, red, yellow } from "farver/fast";
 import fs from "fs-extra";
+import semver from "semver";
 import yargs, { type Argv } from "yargs";
 import pkg from "../package.json" with { type: "json" };
-import { fetchCache } from "./cache";
+import { resolveAdapter } from "./adapters";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
-import { getGroups } from "./groups";
-import { readLockfile, writeLockfile } from "./lockfile";
 import { getAllEmojiVersions } from "./utils";
+import { readLockfile, writeLockfile } from "./utils/lockfile";
 
 const cli = yargs(process.argv.slice(2))
   .scriptName("mojis")
@@ -20,8 +20,8 @@ const cli = yargs(process.argv.slice(2))
   .demandCommand(1, "");
 
 cli.command(
-  "generate:emoji <versions...>",
-  "Generate emoji data for the specified versions",
+  "generate:sequences <versions...>",
+  "Generate emoji sequences for the specified versions",
   (args) => commonOptions(args)
     .positional("versions", {
       type: "string",
@@ -29,7 +29,7 @@ cli.command(
     })
     .strict().help(),
   async (args) => {
-    const _force = args.force ?? false;
+    const force = args.force ?? false;
     const versions = Array.isArray(args.versions) ? args.versions : [args.versions];
 
     if (SUPPORTED_EMOJI_VERSIONS.every((v) => !versions.includes(v))) {
@@ -38,7 +38,40 @@ cli.command(
       process.exit(1);
     }
 
-    console.log("generating emoji data for versions", versions.map((v) => yellow(v)).join(", "));
+    console.log("generating emoji group data for versions", versions.map((v) => yellow(v)).join(", "));
+
+    const promises = versions.map(async (version) => {
+      const coerced = semver.coerce(version);
+
+      if (coerced == null) {
+        throw new Error(`invalid version ${version}`);
+      }
+
+      const adapter = resolveAdapter(coerced.version);
+
+      if (adapter == null) {
+        throw new Error(`no adapter found for version ${version}`);
+      }
+
+      const groups = await adapter.sequences!({ version, force });
+
+      await fs.ensureDir(`./data/v${version}`);
+      return fs.writeFile(
+        `./data/v${version}/sequences.json`,
+        JSON.stringify(groups, null, 2),
+        "utf-8",
+      );
+    });
+
+    const results = await Promise.allSettled(promises);
+
+    for (const result of results) {
+      if (result.status === "rejected") {
+        console.error(red("error:"), result.reason);
+      }
+    }
+
+    console.log(green("done"));
   },
 );
 
@@ -64,17 +97,26 @@ cli.command(
     console.log("generating emoji group data for versions", versions.map((v) => yellow(v)).join(", "));
 
     const promises = versions.map(async (version) => {
-      const groups = await fetchCache(`https://unicode.org/Public/emoji/${version}/emoji-test.txt`, {
-        cacheKey: `v${version}/metadata.json`,
-        parser(data) {
-          return getGroups(data);
-        },
-        bypassCache: force,
-      });
+      const coerced = semver.coerce(version);
+
+      if (coerced == null) {
+        throw new Error(`invalid version ${version}`);
+      }
+
+      const adapter = resolveAdapter(coerced.version);
+
+      if (adapter == null) {
+        throw new Error(`no adapter found for version ${version}`);
+      }
+
+      const groups = await adapter.groups!({ version, force });
 
       await fs.ensureDir(`./data/v${version}`);
-
-      return fs.writeFile(`./data/v${version}/groups.json`, JSON.stringify(groups, null, 2), "utf-8");
+      return fs.writeFile(
+        `./data/v${version}/groups.json`,
+        JSON.stringify(groups, null, 2),
+        "utf-8",
+      );
     });
 
     const results = await Promise.allSettled(promises);

@@ -1,4 +1,4 @@
-import type { EmojiVersion } from "./lockfile";
+import type { EmojiVersion } from "./utils/lockfile";
 import semver from "semver";
 import { NO_EMOJI_VERSIONS } from "./constants";
 
