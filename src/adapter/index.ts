@@ -36,7 +36,7 @@ export interface BaseAdapterContext {
 }
 
 export type GroupFn = (ctx: BaseAdapterContext) => Promise<EmojiGroup[]>;
-export type SequenceFn = (ctx: BaseAdapterContext) => Promise<EmojiSequence[]>;
+export type SequenceFn = (ctx: BaseAdapterContext) => Promise<{ zwj: EmojiSequence[]; sequences: EmojiSequence[] }>;
 
 export const ADAPTERS = new Map<string, MojiAdapter>();
 

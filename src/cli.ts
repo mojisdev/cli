@@ -53,12 +53,17 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const groups = await adapter.sequences!({ version, force });
+      const { sequences, zwj } = await adapter.sequences!({ version, force });
 
       await fs.ensureDir(`./data/v${version}`);
+      await fs.writeFile(
+        `./data/v${version}/zwj-sequences.json`,
+        JSON.stringify(zwj, null, 2),
+        "utf-8",
+      );
       return fs.writeFile(
         `./data/v${version}/sequences.json`,
-        JSON.stringify(groups, null, 2),
+        JSON.stringify(sequences, null, 2),
         "utf-8",
       );
     });

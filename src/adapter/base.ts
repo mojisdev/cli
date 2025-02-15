@@ -15,6 +15,7 @@ export default defineMojiAdapter({
   range: "*",
   groups: async ({ version, force }) => {
     if (version === "1.0" || version === "2.0" || version === "3.0") {
+      console.warn(`version ${version} does not have group data`);
       return [];
     }
 
