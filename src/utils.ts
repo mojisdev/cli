@@ -130,18 +130,9 @@ export async function getAllEmojiVersions(): Promise<EmojiVersion[]> {
   }
 
   return versions.sort((a, b) => {
-    // if unicode version is null, it means it is from the emoji page.
-    // which contains emoji versions, in major.minor format.
-    // so, we will add the last 0 to the version, to be able to compare them.
-    if (a.unicode_version == null) {
-      a.unicode_version = `${a.emoji_version}.0`;
-    }
-
-    if (b.unicode_version == null) {
-      b.unicode_version = `${b.emoji_version}.0`;
-    }
-
-    return semver.compare(b.unicode_version, a.unicode_version);
+    const versionA = a.unicode_version ?? `${a.emoji_version}.0`;
+    const versionB = b.unicode_version ?? `${b.emoji_version}.0`;
+    return semver.compare(versionB, versionA);
   });
 }
 
