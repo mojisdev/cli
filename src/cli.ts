@@ -3,7 +3,7 @@ import consola from "consola";
 import { green, red, yellow } from "farver/fast";
 import fs from "fs-extra";
 import semver from "semver";
-import { parseAsync } from "valibot";
+import { type InferInput, parseAsync } from "valibot";
 import yargs, { type Argv } from "yargs";
 import pkg from "../package.json" with { type: "json" };
 import { MojisNotImplemented } from "./adapter";
@@ -39,7 +39,7 @@ cli.command(
     .option("shortcode-providers", {
       type: "array",
       description: "shortcode providers to use",
-      default: ["github", "joypixels", "iamcal"],
+      default: ["github"] satisfies InferInput<typeof SHORTCODE_PROVIDERS_SCHEMA>,
     })
     .strict().help(),
   async (args) => {
@@ -139,19 +139,13 @@ cli.command(
           throw new MojisNotImplemented("emojis");
         }
 
-        const { emojiData } = await adapter.emojis({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+        const emojis = await adapter.emojis({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
 
         await fs.ensureDir(`./data/v${version}`);
 
         await fs.writeFile(
-          `./data/v${version}/emoji-data.json`,
-          JSON.stringify(emojiData, null, 2),
-          "utf-8",
-        );
-
-        await fs.writeFile(
           `./data/v${version}/emojis.json`,
-          JSON.stringify({}, null, 2),
+          JSON.stringify(emojis, null, 2),
           "utf-8",
         );
       }
@@ -172,6 +166,11 @@ cli.command(
         await fs.ensureDir(`./data/v${version}/shortcodes`);
 
         for (const provider of providers) {
+          if (shortcodes[provider] == null) {
+            consola.warn(`no shortcodes found for provider ${provider}`);
+            continue;
+          }
+
           await fs.writeFile(
             `./data/v${version}/shortcodes/${provider}.json`,
             JSON.stringify(shortcodes[provider], null, 2),

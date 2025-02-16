@@ -2,8 +2,6 @@ import * as v from "valibot";
 
 export const SHORTCODE_PROVIDER_SCHEMA = v.union([
   v.literal("github"),
-  v.literal("joypixels"),
-  v.literal("iamcal"),
 ]);
 
 export const SHORTCODE_PROVIDERS_SCHEMA = v.array(SHORTCODE_PROVIDER_SCHEMA);

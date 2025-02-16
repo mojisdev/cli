@@ -1,4 +1,4 @@
-import type { EmojiData, EmojiSequence, EmojiVariation, Property } from "../types";
+import type { Emoji, EmojiData, EmojiSequence, EmojiShortcode, EmojiVariation, Property, ShortcodeProvider } from "../types";
 import { defineMojiAdapter } from "../adapter";
 import { FEMALE_SIGN, MALE_SIGN } from "../constants";
 import { extractEmojiVersion, extractUnicodeVersion } from "../utils";
@@ -71,6 +71,11 @@ export default defineMojiAdapter({
   },
   async emojis(ctx) {
     const unicodeNames = await this.unicodeNames!(ctx);
+    const { sequences, zwj } = await this.sequences!(ctx);
+    const metadata = await this.metadata!(ctx);
+    const variations = await this.variations!(ctx);
+
+    const emojis: Record<string, Emoji> = {};
 
     const emojiData = await fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-data.txt`, {
       cacheKey: `v${ctx.emojiVersion}/emoji-data.json`,
@@ -134,9 +139,13 @@ export default defineMojiAdapter({
       bypassCache: ctx.force,
     });
 
-    return {
-      emojiData,
-    };
+    // join names, metadata, variations, sequences, zwj
+
+    for (const [hex, data] of Object.entries(emojiData)) {
+
+    }
+
+    return {};
   },
   variations: async (ctx) => {
     return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-variation-sequences.txt`, {

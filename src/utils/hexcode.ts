@@ -52,3 +52,17 @@ export function expandHexRange(hex: string): string[] {
 
   return [hex];
 }
+
+/**
+ * Removes specific unicode variation selectors from a hex string.
+ * Specifically removes:
+ * - 200D (Zero Width Joiner)
+ * - FE0E (Variation Selector-15, text style)
+ * - FE0F (Variation Selector-16, emoji style)
+ *
+ * @param {string} hex - The hex string to strip variation selectors from
+ * @returns {string} The hex string with variation selectors removed
+ */
+export function stripHex(hex: string): string {
+  return hex.replace(/(-| )?(200D|FE0E|FE0F)/g, "");
+}

@@ -10,14 +10,9 @@ export interface EmojiGroup {
 export interface Emoji {
   name: string;
   slug: string;
-  components: EmojiComponent[];
-  hexcode: string;
-  type: "ZWJ" | "SINGLE";
-}
-
-// eslint-disable-next-line ts/no-empty-object-type
-export interface EmojiComponent {
-
+  code: string;
+  hexcodes: string[];
+  shortcodes: EmojiShortcode[];
 }
 
 export type ShortcodeProvider = InferInput<typeof SHORTCODE_PROVIDER_SCHEMA>;

@@ -1,4 +1,4 @@
-import type { EmojiGroup, EmojiMetadata } from "../types";
+import type { EmojiGroup, EmojiMetadata, EmojiShortcode, ShortcodeProvider } from "../types";
 import consola from "consola";
 import { red, yellow } from "farver/fast";
 import { defineMojiAdapter, MojisNotImplemented } from "../adapter";
@@ -118,7 +118,6 @@ export default defineMojiAdapter({
   sequences: notImplemented("sequences"),
   emojis: notImplemented("emojis"),
   variations: notImplemented("variations"),
-  shortcodes: notImplemented("shortcodes"),
   unicodeNames: async (ctx) => {
     return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/UnicodeData.txt`, {
       cacheKey: `v${ctx.emojiVersion}/unicode-names.json`,
@@ -144,5 +143,32 @@ export default defineMojiAdapter({
       },
       bypassCache: ctx.force,
     });
+  },
+  async shortcodes(ctx) {
+    const providers = ctx.providers;
+
+    if (providers.length === 0) {
+      throw new Error("no shortcode providers specified");
+    }
+
+    const shortcodes: Partial<Record<ShortcodeProvider, EmojiShortcode[]>> = {};
+
+    if (this.emojis == null) {
+      throw new MojisNotImplemented("emojis");
+    }
+
+    const emojis = await this.emojis(ctx);
+
+    if (providers.includes("github")) {
+      const githubShortcodesFn = await import("../shortcode/github").then((m) => m.generateGitHubShortcodes);
+
+      shortcodes.github = await githubShortcodesFn({
+        emojis,
+        force: ctx.force,
+        version: ctx.emojiVersion,
+      });
+    }
+
+    return shortcodes;
   },
 });
