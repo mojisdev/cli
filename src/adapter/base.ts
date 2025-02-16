@@ -1,9 +1,8 @@
 import type { EmojiGroup, EmojiMetadata } from "../types";
 import { red } from "farver/fast";
-import { defineMojiAdapter } from "../adapter";
+import { defineMojiAdapter, MojisNotImplemented } from "../adapter";
 import { extractEmojiVersion, extractUnicodeVersion, slugify } from "../utils";
 import { fetchCache } from "../utils/cache";
-import { MojisNotImplemented } from "../utils/errors";
 
 function notImplemented(adapterFn: string) {
   return async () => {

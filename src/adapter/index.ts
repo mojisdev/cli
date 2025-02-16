@@ -88,3 +88,10 @@ export function defineMojiAdapter(adapter: MojiAdapter): MojiAdapter {
 
   return adapter;
 }
+
+export class MojisNotImplemented extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MojisNotImplemented";
+  }
+}

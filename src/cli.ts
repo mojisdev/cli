@@ -4,10 +4,10 @@ import fs from "fs-extra";
 import semver from "semver";
 import yargs, { type Argv } from "yargs";
 import pkg from "../package.json" with { type: "json" };
+import { MojisNotImplemented } from "./adapter";
 import { resolveAdapter } from "./adapters";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
 import { getAllEmojiVersions, getUnicodeVersionByEmojiVersion } from "./utils";
-import { isNotImplementedError } from "./utils/errors";
 import { readLockfile, writeLockfile } from "./utils/lockfile";
 
 const cli = yargs(process.argv.slice(2))
@@ -68,7 +68,7 @@ cli.command(
 
     for (const result of results) {
       if (result.status === "rejected") {
-        if (isNotImplementedError(result.reason)) {
+        if (result.reason instanceof MojisNotImplemented) {
           console.warn(yellow("warning:"), result.reason.message);
           continue;
         }
@@ -128,7 +128,7 @@ cli.command(
 
     for (const result of results) {
       if (result.status === "rejected") {
-        if (isNotImplementedError(result.reason)) {
+        if (result.reason instanceof MojisNotImplemented) {
           console.warn(yellow("warning:"), result.reason.message);
           continue;
         }
@@ -193,7 +193,7 @@ cli.command(
 
     for (const result of results) {
       if (result.status === "rejected") {
-        if (isNotImplementedError(result.reason)) {
+        if (result.reason instanceof MojisNotImplemented) {
           console.warn(yellow("warning:"), result.reason.message);
           continue;
         }
@@ -260,7 +260,7 @@ cli.command(
 
     for (const result of results) {
       if (result.status === "rejected") {
-        if (isNotImplementedError(result.reason)) {
+        if (result.reason instanceof MojisNotImplemented) {
           console.warn(yellow("warning:"), result.reason.message);
           continue;
         }
