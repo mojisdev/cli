@@ -67,4 +67,5 @@ export default defineMojiAdapter({
   sequences: notImplemented("sequences"),
   emojis: notImplemented("emojis"),
   variations: notImplemented("variations"),
+  shortcodes: notImplemented("shortcodes"),
 });
