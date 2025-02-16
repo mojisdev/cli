@@ -1,5 +1,6 @@
 import path from "node:path";
 import process from "node:process";
+import consola from "consola";
 import { green } from "farver/fast";
 import fs from "fs-extra";
 
@@ -60,8 +61,7 @@ export async function fetchCache<TData = unknown>(
   const cache = LOCAL_CACHE[cacheKey] || await readCache<TData>(cacheKey);
 
   if (!bypassCache && cache != null) {
-    // eslint-disable-next-line no-console
-    console.log(`cache hit: ${green(cacheKey)}`);
+    consola.debug(`cache hit: ${green(cacheKey)}`);
     LOCAL_CACHE[cacheKey] = cache;
 
     return cache as TData;

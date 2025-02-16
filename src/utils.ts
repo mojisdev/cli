@@ -1,4 +1,5 @@
 import type { EmojiVersion } from "./utils/lockfile";
+import consola from "consola";
 import semver from "semver";
 import { NO_EMOJI_VERSIONS } from "./constants";
 
@@ -60,7 +61,7 @@ export async function getAllEmojiVersions(): Promise<EmojiVersion[]> {
   }
 
   if (rootResult.status === "rejected" || emojiResult.status === "rejected") {
-    console.error({
+    consola.error({
       root: rootResult.status === "rejected" ? rootResult.reason : "ok",
       emoji: emojiResult.status === "rejected" ? emojiResult.reason : "ok",
     });
@@ -206,7 +207,7 @@ export async function getCurrentDraftVersion(): Promise<string | null> {
   }
 
   if (rootResult.status === "rejected" || emojiResult.status === "rejected") {
-    console.error({
+    consola.error({
       root: rootResult.status === "rejected" ? rootResult.reason : "ok",
       emoji: emojiResult.status === "rejected" ? emojiResult.reason : "ok",
     });

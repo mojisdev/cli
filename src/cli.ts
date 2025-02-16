@@ -1,4 +1,5 @@
 import process from "node:process";
+import consola from "consola";
 import { green, red, yellow } from "farver/fast";
 import fs from "fs-extra";
 import semver from "semver";
@@ -54,12 +55,12 @@ cli.command(
 
     // require that all versions are supported, otherwise exit
     if (unsupported.length > 0) {
-      console.error(red("error:"), `version(s) ${unsupported.map((v) => yellow(v)).join(", ")} is not supported`);
+      consola.error(`version(s) ${unsupported.map((v) => yellow(v)).join(", ")} is not supported`);
       process.exit(1);
     }
 
-    console.log("generating emoji data for versions", versions.map((v) => yellow(v)).join(", "));
-    console.log(`using the following generators ${args.generators.map((g) => yellow(g)).join(", ")}`);
+    consola.info("generating emoji data for versions", versions.map((v) => yellow(v)).join(", "));
+    consola.info(`using the following generators ${args.generators.map((g) => yellow(g)).join(", ")}`);
 
     const promises = versions.map(async (version) => {
       const coerced = semver.coerce(version);
@@ -185,14 +186,14 @@ cli.command(
     for (const result of results) {
       if (result.status === "rejected") {
         if (result.reason instanceof MojisNotImplemented) {
-          console.warn(yellow("warning:"), result.reason.message);
+          consola.warn(result.reason.message);
           continue;
         }
-        console.error(red("error:"), result.reason);
+        consola.error(result.reason);
       }
     }
 
-    console.log(green("done"));
+    consola.info(green("done"));
   },
 );
 
@@ -211,7 +212,7 @@ cli.command(
 
     const latest = versions[0];
 
-    console.log("latest emoji version:", yellow(latest?.emoji_version));
+    consola.log("latest emoji version:", yellow(latest?.emoji_version));
 
     if (args.writeLockfile) {
       const lockfile = await readLockfile();
@@ -219,7 +220,7 @@ cli.command(
       lockfile.latestVersion = latest?.emoji_version;
 
       await writeLockfile(lockfile);
-      console.log(`updated ${yellow("emojis.lock")}`);
+      consola.log(`updated ${yellow("emojis.lock")}`);
     }
   },
 );
@@ -236,8 +237,8 @@ cli.command(
   async (args) => {
     const versions = await getAllEmojiVersions();
 
-    console.log("all available versions:");
-    console.log(versions.map((v) => `${yellow(v.emoji_version)}${v.draft ? ` ${red("(draft)")}` : ""}`).join(", "));
+    consola.log("all available versions:");
+    consola.log(versions.map((v) => `${yellow(v.emoji_version)}${v.draft ? ` ${red("(draft)")}` : ""}`).join(", "));
 
     if (args.writeLockfile) {
       const lockfile = await readLockfile();
@@ -245,7 +246,7 @@ cli.command(
       lockfile.versions = Array.from(versions);
 
       await writeLockfile(lockfile);
-      console.log(`updated ${yellow("emojis.lock")}`);
+      consola.log(`updated ${yellow("emojis.lock")}`);
     }
   },
 );

@@ -1,4 +1,5 @@
 import type { EmojiGroup, EmojiMetadata } from "../types";
+import consola from "consola";
 import { red, yellow } from "farver/fast";
 import { defineMojiAdapter, MojisNotImplemented } from "../adapter";
 import { extractEmojiVersion, extractUnicodeVersion, slugify } from "../utils";
@@ -16,7 +17,7 @@ export default defineMojiAdapter({
   range: "*",
   metadata: async (ctx) => {
     if (ctx.emojiVersion === "1.0" || ctx.emojiVersion === "2.0" || ctx.emojiVersion === "3.0") {
-      console.warn(`skipping metadata for emoji version ${yellow(ctx.emojiVersion)}, as it's not supported.`);
+      consola.warn(`skipping metadata for emoji version ${yellow(ctx.emojiVersion)}, as it's not supported.`);
       return {
         groups: [],
         emojiMetadata: {},
