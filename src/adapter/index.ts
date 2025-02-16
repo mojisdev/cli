@@ -1,4 +1,4 @@
-import type { EmojiGroup, EmojiMetadata, EmojiSequence, EmojiShortcode, EmojiVariation } from "../types";
+import type { EmojiData, EmojiGroup, EmojiMetadata, EmojiSequence, EmojiShortcode, EmojiVariation } from "../types";
 import semver from "semver";
 
 export interface MojiAdapter {
@@ -40,6 +40,8 @@ export interface MojiAdapter {
   shortcodes?: ShortcodeFn;
 
   metadata?: MetadataFn;
+
+  unicodeNames?: UnicodeNamesFn;
 }
 
 export interface BaseAdapterContext {
@@ -48,8 +50,11 @@ export interface BaseAdapterContext {
   force: boolean;
 }
 
+export type UnicodeNamesFn = (ctx: BaseAdapterContext) => Promise<Record<string, string>>;
 export type SequenceFn = (ctx: BaseAdapterContext) => Promise<{ zwj: EmojiSequence[]; sequences: EmojiSequence[] }>;
-export type EmojiFn = (ctx: BaseAdapterContext) => Promise<any>;
+export type EmojiFn = (ctx: BaseAdapterContext) => Promise<{
+  emojiData: Record<string, EmojiData>;
+}>;
 export type EmojiVariationFn = (ctx: BaseAdapterContext) => Promise<EmojiVariation[]>;
 export type ShortcodeFn = (ctx: BaseAdapterContext & {
   providers: string[];

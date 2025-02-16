@@ -118,4 +118,30 @@ export default defineMojiAdapter({
   emojis: notImplemented("emojis"),
   variations: notImplemented("variations"),
   shortcodes: notImplemented("shortcodes"),
+  unicodeNames: async (ctx) => {
+    return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/UnicodeData.txt`, {
+      cacheKey: `v${ctx.emojiVersion}/unicode-names.json`,
+      parser(data) {
+        const lines = data.split("\n");
+        const unicodeNames: Record<string, string> = {};
+
+        for (const line of lines) {
+          if (line.trim() === "" || line.startsWith("#")) {
+            continue;
+          }
+
+          const [hex, name] = line.split(";").map((col) => col.trim());
+
+          if (hex == null || name == null) {
+            throw new Error(`invalid line: ${line}`);
+          }
+
+          unicodeNames[hex] = name;
+        }
+
+        return unicodeNames;
+      },
+      bypassCache: ctx.force,
+    });
+  },
 });

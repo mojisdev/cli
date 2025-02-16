@@ -54,12 +54,19 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const emojis = await adapter.emojis!({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+      const { emojiData } = await adapter.emojis!({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
 
       await fs.ensureDir(`./data/v${version}`);
+
+      await fs.writeFile(
+        `./data/v${version}/emoji-data.json`,
+        JSON.stringify(emojiData, null, 2),
+        "utf-8",
+      );
+
       return fs.writeFile(
         `./data/v${version}/emojis.json`,
-        JSON.stringify(emojis, null, 2),
+        JSON.stringify({}, null, 2),
         "utf-8",
       );
     });

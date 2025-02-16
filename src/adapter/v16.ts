@@ -70,6 +70,8 @@ export default defineMojiAdapter({
     };
   },
   async emojis(ctx) {
+    const unicodeNames = await this.unicodeNames!(ctx);
+
     const emojiData = await fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-data.txt`, {
       cacheKey: `v${ctx.emojiVersion}/emoji-data.json`,
       parser(data) {
@@ -112,6 +114,7 @@ export default defineMojiAdapter({
             properties: [(property as Property) || "Emoji"],
             unicodeVersion: extractUnicodeVersion(emojiVersion, ctx.unicodeVersion),
             emojiVersion,
+            name: unicodeNames[hex] || "",
           };
 
           for (const hex of expandedHex) {
@@ -131,7 +134,9 @@ export default defineMojiAdapter({
       bypassCache: ctx.force,
     });
 
-    return emojiData;
+    return {
+      emojiData,
+    };
   },
   variations: async (ctx) => {
     return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-variation-sequences.txt`, {

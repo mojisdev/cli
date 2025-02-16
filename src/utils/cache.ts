@@ -1,5 +1,6 @@
 import path from "node:path";
 import process from "node:process";
+import { green } from "farver/fast";
 import fs from "fs-extra";
 
 const CACHE_FOLDER = path.resolve(process.cwd(), ".cache");
@@ -56,9 +57,11 @@ export async function fetchCache<TData = unknown>(
 ): Promise<TData> {
   const { cacheKey, parser, bypassCache, options: fetchOptions } = options;
 
-  const cache = LOCAL_CACHE[cacheKey] || await readCache(cacheKey);
+  const cache = LOCAL_CACHE[cacheKey] || await readCache<TData>(cacheKey);
 
   if (!bypassCache && cache != null) {
+    // eslint-disable-next-line no-console
+    console.log(`cache hit: ${green(cacheKey)}`);
     LOCAL_CACHE[cacheKey] = cache;
 
     return cache as TData;

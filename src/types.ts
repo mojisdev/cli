@@ -35,6 +35,7 @@ export interface EmojiData {
   properties: Property[];
   unicodeVersion: string | null;
   emojiVersion: string | null;
+  name: string;
 }
 
 export interface EmojiShortcode {
