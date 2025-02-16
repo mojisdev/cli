@@ -6,7 +6,7 @@ import yargs, { type Argv } from "yargs";
 import pkg from "../package.json" with { type: "json" };
 import { resolveAdapter } from "./adapters";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
-import { extractUnicodeVersion, getAllEmojiVersions, getUnicodeVersionByEmojiVersion } from "./utils";
+import { getAllEmojiVersions, getUnicodeVersionByEmojiVersion } from "./utils";
 import { isNotImplementedError } from "./utils/errors";
 import { readLockfile, writeLockfile } from "./utils/lockfile";
 
