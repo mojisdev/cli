@@ -118,23 +118,40 @@ export async function getAllEmojiVersions(): Promise<EmojiVersion[]> {
     // if it does, we will update the emoji version.
     const existing = versions.find((v) => v.unicode_version === version);
 
+    let unicode_version = null;
+
+    // the emoji version 13.1 is using the unicode
+    // 13.0, since it was never released.
+    if (match[1] === "13.1") {
+      unicode_version = "13.0.0";
+    }
+
+    if (match[1] === "5.0") {
+      unicode_version = "10.0.0";
+    }
+
+    if (match[1] === "4.0" || match[1] === "3.0") {
+      unicode_version = "9.0.0";
+    }
+
+    if (match[1] === "2.0" || match[1] === "1.0") {
+      unicode_version = "8.0.0";
+    }
+
     if (existing) {
+      existing.unicode_version = unicode_version || existing.unicode_version;
       existing.emoji_version = match[1];
       continue;
     }
 
     versions.push({
       emoji_version: match[1],
-      unicode_version: null,
+      unicode_version,
       draft: version === draft,
     });
   }
 
-  return versions.sort((a, b) => {
-    const versionA = a.unicode_version ?? `${a.emoji_version}.0`;
-    const versionB = b.unicode_version ?? `${b.emoji_version}.0`;
-    return semver.compare(versionB, versionA);
-  });
+  return versions.sort((a, b) => semver.compare(`${b.emoji_version}.0`, `${a.emoji_version}.0`));
 }
 
 /**
@@ -166,7 +183,7 @@ export async function isEmojiVersionValid(version: string): Promise<boolean> {
   // from v1 to v5, there was only major releases. So no v1.1, v1.2, etc.
   // only, v1.0, v2.0, v3.0, v4.0, v5.0.
   // if version has any minor or patch, it is invalid.
-  if (semver.minor(version) !== 0 || semver.patch(version) !== 0) {
+  if (semver.major(version) <= 5 && (semver.minor(version) !== 0 || semver.patch(version) !== 0)) {
     return false;
   }
 
