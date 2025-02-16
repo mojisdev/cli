@@ -103,15 +103,16 @@ export default defineMojiAdapter({
           }
 
           const expandedHex = expandHexRange(hex);
-          const emojiVersion = extractEmojiVersion(lineComment) ?? Number.parseFloat(ctx.version);
+          const emojiVersion = extractEmojiVersion(lineComment);
 
           const emoji: EmojiData = {
             description: lineComment,
             hexcode: "",
             gender: null,
             properties: [(property as Property) || "Emoji"],
-            unicodeVersion: extractUnicodeVersion(emojiVersion, 16.0),
-            version: emojiVersion,
+            // TODO: use correct unicode version
+            unicodeVersion: extractUnicodeVersion(emojiVersion, "16.0"),
+            emojiVersion,
           };
 
           for (const hex of expandedHex) {

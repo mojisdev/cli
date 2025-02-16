@@ -239,9 +239,9 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const { groups } = await adapter.metadata!({ version, force });
+      const { groups, emojiMetadata } = await adapter.metadata!({ version, force });
 
-      await fs.ensureDir(`./data/v${version}`);
+      await fs.ensureDir(`./data/v${version}/metadata`);
 
       await fs.writeFile(
         `./data/v${version}/groups.json`,
@@ -249,14 +249,14 @@ cli.command(
         "utf-8",
       );
 
-      return fs.writeFile(
-        `./data/v${version}/metadata.json`,
-        JSON.stringify({ groups }, null, 2),
+      return Object.entries(emojiMetadata).map(([group, metadata]) => fs.writeFile(
+        `./data/v${version}/metadata/${group}.json`,
+        JSON.stringify(metadata, null, 2),
         "utf-8",
-      );
+      ));
     });
 
-    const results = await Promise.allSettled(promises);
+    const results = await Promise.allSettled(promises.flat());
 
     for (const result of results) {
       if (result.status === "rejected") {

@@ -17,13 +17,24 @@ export interface EmojiComponent {
 
 }
 
+export interface EmojiMetadata {
+  group: string;
+  subgroup: string;
+  qualifier: string;
+  unicodeVersion: string | null;
+  emojiVersion: string | null;
+  description: string;
+  emoji: string | null;
+  hexcodes: string[];
+}
+
 export interface EmojiData {
   description: string;
   gender: string | null;
   hexcode: string;
   properties: Property[];
-  unicodeVersion: number | null;
-  version: number;
+  unicodeVersion: string | null;
+  emojiVersion: string | null;
 }
 
 export interface EmojiShortcode {

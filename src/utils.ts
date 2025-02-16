@@ -272,44 +272,61 @@ export function extractVersion(text: string): string | null {
  * The version should be in the format "E{major}.{minor}" (e.g. "E14.0").
  *
  * @param {string} comment - The comment string to extract the version from
- * @returns {number | null} The parsed version number, or null if no valid version was found
+ * @returns {string | null} The parsed version number, or null if no valid version was found
  *
  * @example
  * ```ts
- * extractEmojiVersion("E14.0") // returns 14.0
+ * extractEmojiVersion("E14.0") // returns "14.0"
  * extractEmojiVersion("Something else") // returns null
  * ```
  */
-export function extractEmojiVersion(comment: string): number | null {
+export function extractEmojiVersion(comment: string): string | null {
   const version = comment.match(/E(\d+\.\d)/);
 
   if (version != null && version[1] != null) {
-    return Number.parseFloat(version[1].trim());
+    return version[1].trim();
   }
 
   return null;
 }
 
 // https://unicode.org/reports/tr51/#EmojiVersions
-export function extractUnicodeVersion(emojiVersion: number, unicodeVersion?: number): number {
+export function extractUnicodeVersion(emojiVersion: string | null, unicodeVersion?: string): string | null {
+  const coercedEmojiVersion = semver.coerce(emojiVersion);
+  const coercedUnicodeVersion = semver.coerce(unicodeVersion);
+
+  if (coercedEmojiVersion == null || coercedUnicodeVersion == null) {
+    return null;
+  }
+
   // v11+ aligned emoji and unicode specs (except for minor versions)
-  if (emojiVersion >= 11) {
-    return unicodeVersion ? Math.min(emojiVersion, unicodeVersion) : emojiVersion;
+  if (semver.gte(coercedEmojiVersion, "11.0.0")) {
+    // if the unicode version is not provided, we will return the emoji version.
+    if (unicodeVersion == null) {
+      return emojiVersion;
+    }
+
+    // return the smallest version between the emoji and unicode version.
+    if (semver.lt(coercedEmojiVersion, coercedUnicodeVersion)) {
+      return emojiVersion;
+    }
+
+    return unicodeVersion;
   }
 
   switch (emojiVersion) {
-    case 0.7:
-      return 7;
-    case 1:
-    case 2:
-      return 8;
-    case 3:
-    case 4:
-      return 9;
-    case 5:
-      return 10;
+    case "0.7":
+      return "7.0";
+    case "1.0":
+    case "2.0":
+      return "8.0";
+    case "3.0":
+    case "4.0":
+      return "9.0";
+    case "5.0":
+      return "10.0";
     default:
       // v6 is the first unicode spec emojis appeared in
-      return 6;
+      return "6.0";
   }
 }
