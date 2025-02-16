@@ -1,6 +1,7 @@
-import type { EmojiSequence, EmojiVariation } from "../types";
+import type { EmojiData, EmojiSequence, EmojiVariation, Property } from "../types";
 import { defineMojiAdapter } from "../adapter";
 import { FEMALE_SIGN, MALE_SIGN } from "../constants";
+import { extractEmojiVersion, extractUnicodeVersion } from "../utils";
 import { fetchCache } from "../utils/cache";
 import { expandHexRange } from "../utils/hexcode";
 
@@ -28,7 +29,7 @@ export default defineMojiAdapter({
           const sequences: EmojiSequence[] = [];
 
           for (let line of lines) {
-          // skip empty line & comments
+            // skip empty line & comments
             if (line.trim() === "" || line.startsWith("#")) {
               continue;
             }
@@ -68,7 +69,69 @@ export default defineMojiAdapter({
       zwj: zwj || [],
     };
   },
-  async emojis({ version, force }) {
+  async emojis(ctx) {
+    const emojiData = await fetchCache(`https://unicode.org/Public/${ctx.version}.0/ucd/emoji/emoji-data.txt`, {
+      cacheKey: `v${ctx.version}/emoji-data.json`,
+      parser(data) {
+        const lines = data.split("\n");
+
+        const emojiData: Record<string, EmojiData> = {};
+
+        for (const line of lines) {
+          // skip empty line & comments
+          if (line.trim() === "" || line.startsWith("#")) {
+            continue;
+          }
+
+          const lineCommentIndex = line.indexOf("#");
+          const lineComment = lineCommentIndex !== -1 ? line.slice(lineCommentIndex + 1).trim() : "";
+
+          let [hex, property] = line.split(";").map((col) => col.trim()).slice(0, 4);
+
+          if (hex == null || property == null) {
+            throw new Error(`invalid line: ${line}`);
+          }
+
+          // remove line comment from property
+          const propertyCommentIndex = property.indexOf("#");
+          if (propertyCommentIndex !== -1) {
+            property = property.slice(0, propertyCommentIndex).trim();
+          }
+
+          if (property === "Extended_Pictographic") {
+            continue;
+          }
+
+          const expandedHex = expandHexRange(hex);
+          const emojiVersion = extractEmojiVersion(lineComment) ?? Number.parseFloat(ctx.version);
+
+          const emoji: EmojiData = {
+            description: lineComment,
+            hexcode: "",
+            gender: null,
+            properties: [(property as Property) || "Emoji"],
+            unicodeVersion: extractUnicodeVersion(emojiVersion, 16.0),
+            version: emojiVersion,
+          };
+
+          for (const hex of expandedHex) {
+            if (emojiData[hex] != null) {
+              emojiData[hex].properties = [...new Set([...emojiData[hex].properties, ...emoji.properties])];
+            } else {
+              emojiData[hex] = {
+                ...emoji,
+                hexcode: hex.replace(/\s+/g, "-"),
+              };
+            }
+          }
+        }
+
+        return emojiData;
+      },
+      bypassCache: ctx.force,
+    });
+
+    return emojiData;
   },
   variations: async (ctx) => {
     return fetchCache(`https://unicode.org/Public/${ctx.version}.0/ucd/emoji/emoji-variation-sequences.txt`, {

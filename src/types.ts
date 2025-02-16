@@ -17,6 +17,15 @@ export interface EmojiComponent {
 
 }
 
+export interface EmojiData {
+  description: string;
+  gender: string | null;
+  hexcode: string;
+  properties: Property[];
+  unicodeVersion: number | null;
+  version: number;
+}
+
 export interface EmojiShortcode {
   /**
    * The shortcode for the emoji.
