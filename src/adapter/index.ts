@@ -23,11 +23,6 @@ export interface MojiAdapter {
   extend?: string;
 
   /**
-   * A function to generate the emoji groups for the specified version.
-   */
-  groups?: GroupFn;
-
-  /**
    * A function to generate the emoji sequences for the specified version
    */
   sequences?: SequenceFn;
@@ -43,6 +38,8 @@ export interface MojiAdapter {
   variations?: EmojiVariationFn;
 
   shortcodes?: ShortcodeFn;
+
+  metadata?: MetadataFn;
 }
 
 export interface BaseAdapterContext {
@@ -57,6 +54,9 @@ export type EmojiVariationFn = (ctx: BaseAdapterContext) => Promise<EmojiVariati
 export type ShortcodeFn = (ctx: BaseAdapterContext & {
   providers: string[];
 }) => Promise<EmojiShortcode[]>;
+export type MetadataFn = (ctx: BaseAdapterContext) => Promise<{
+  groups: EmojiGroup[];
+}>;
 
 export const ADAPTERS = new Map<string, MojiAdapter>();
 

@@ -193,6 +193,10 @@ cli.command(
 
     for (const result of results) {
       if (result.status === "rejected") {
+        if (isNotImplementedError(result.reason)) {
+          console.warn(yellow("warning:"), result.reason.message);
+          continue;
+        }
         console.error(red("error:"), result.reason);
       }
     }
@@ -202,8 +206,8 @@ cli.command(
 );
 
 cli.command(
-  "generate:groups <versions...>",
-  "Generate emoji group data for the specified versions",
+  "generate:metadata <versions...>",
+  "Generate emoji metadata for the specified versions",
   (args) => commonOptions(args)
     .positional("versions", {
       type: "string",
@@ -220,7 +224,7 @@ cli.command(
       process.exit(1);
     }
 
-    console.log("generating emoji group data for versions", versions.map((v) => yellow(v)).join(", "));
+    console.log("generating emoji metadata for versions", versions.map((v) => yellow(v)).join(", "));
 
     const promises = versions.map(async (version) => {
       const coerced = semver.coerce(version);
@@ -235,12 +239,19 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const groups = await adapter.groups!({ version, force });
+      const { groups } = await adapter.metadata!({ version, force });
 
       await fs.ensureDir(`./data/v${version}`);
-      return fs.writeFile(
+
+      await fs.writeFile(
         `./data/v${version}/groups.json`,
         JSON.stringify(groups, null, 2),
+        "utf-8",
+      );
+
+      return fs.writeFile(
+        `./data/v${version}/metadata.json`,
+        JSON.stringify({ groups }, null, 2),
         "utf-8",
       );
     });
@@ -249,6 +260,10 @@ cli.command(
 
     for (const result of results) {
       if (result.status === "rejected") {
+        if (isNotImplementedError(result.reason)) {
+          console.warn(yellow("warning:"), result.reason.message);
+          continue;
+        }
         console.error(red("error:"), result.reason);
       }
     }

@@ -15,13 +15,15 @@ export default defineMojiAdapter({
   name: "base",
   description: "base adapter",
   range: "*",
-  groups: async ({ version, force }) => {
+  metadata: async ({ version, force }) => {
     if (version === "1.0" || version === "2.0" || version === "3.0") {
       console.warn(`version ${version} does not have group data`);
-      return [];
+      return {
+        groups: [],
+      };
     }
 
-    const groups = await fetchCache(`https://unicode.org/Public/emoji/${version}/emoji-test.txt`, {
+    return fetchCache(`https://unicode.org/Public/emoji/${version}/emoji-test.txt`, {
       cacheKey: `v${version}/metadata.json`,
       parser(data) {
         const lines = data.split("\n");
@@ -57,12 +59,12 @@ export default defineMojiAdapter({
           }
         }
 
-        return groups;
+        return {
+          groups,
+        };
       },
       bypassCache: force,
     });
-
-    return groups;
   },
   sequences: notImplemented("sequences"),
   emojis: notImplemented("emojis"),
