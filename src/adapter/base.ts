@@ -119,7 +119,7 @@ export default defineMojiAdapter({
   emojis: notImplemented("emojis"),
   variations: notImplemented("variations"),
   unicodeNames: async (ctx) => {
-    return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/UnicodeData.txt`, {
+    return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion === "13.1" ? "13.0" : ctx.emojiVersion}.0/ucd/UnicodeData.txt`, {
       cacheKey: `v${ctx.emojiVersion}/unicode-names.json`,
       parser(data) {
         const lines = data.split("\n");

@@ -1,4 +1,4 @@
-import type { Emoji, EmojiData, EmojiSequence, EmojiShortcode, EmojiVariation, Property, ShortcodeProvider } from "../types";
+import type { Emoji, EmojiData, EmojiSequence, EmojiVariation, Property } from "../types";
 import { defineMojiAdapter } from "../adapter";
 import { FEMALE_SIGN, MALE_SIGN } from "../constants";
 import { extractEmojiVersion, extractUnicodeVersion } from "../utils";
