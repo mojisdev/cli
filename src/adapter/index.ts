@@ -52,7 +52,11 @@ export interface BaseAdapterContext {
 
 export type UnicodeNamesFn = (ctx: BaseAdapterContext) => Promise<Record<string, string>>;
 export type SequenceFn = (ctx: BaseAdapterContext) => Promise<{ zwj: EmojiSequence[]; sequences: EmojiSequence[] }>;
-export type EmojiFn = (ctx: BaseAdapterContext) => Promise<Record<string, Emoji>>;
+export type EmojiFn = (ctx: BaseAdapterContext) => Promise<{
+  emojiData: Record<string, EmojiData>;
+  // group: subgroup: hexcode: emoji
+  emojis: Record<string, Record<string, Record<string, Emoji>>>;
+}>;
 export type EmojiVariationFn = (ctx: BaseAdapterContext) => Promise<EmojiVariation[]>;
 export type ShortcodeFn = (ctx: BaseAdapterContext & {
   providers: ShortcodeProvider[];

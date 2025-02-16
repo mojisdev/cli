@@ -139,15 +139,31 @@ cli.command(
           throw new MojisNotImplemented("emojis");
         }
 
-        const emojis = await adapter.emojis({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+        const { emojiData, emojis } = await adapter.emojis({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
 
         await fs.ensureDir(`./data/v${version}`);
 
         await fs.writeFile(
-          `./data/v${version}/emojis.json`,
-          JSON.stringify(emojis, null, 2),
+          `./data/v${version}/emoji-data.json`,
+          JSON.stringify(emojiData, null, 2),
           "utf-8",
         );
+
+        for (const [group, subgroup] of Object.entries(emojis)) {
+          await fs.ensureDir(`./data/v${version}/emojis/${group}`);
+
+          for (const hexcodes of Object.values(subgroup)) {
+            await fs.ensureDir(`./data/v${version}/emojis/${group}/${subgroup}`);
+
+            for (const [hexcode, emoji] of Object.entries(hexcodes)) {
+              await fs.writeFile(
+                `./data/v${version}/emojis/${group}/${subgroup}/${hexcode}.json`,
+                JSON.stringify(emoji, null, 2),
+                "utf-8",
+              );
+            }
+          }
+        }
       }
 
       if (isGeneratorEnabled("shortcodes")) {

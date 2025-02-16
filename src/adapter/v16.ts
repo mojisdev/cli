@@ -71,11 +71,11 @@ export default defineMojiAdapter({
   },
   async emojis(ctx) {
     const unicodeNames = await this.unicodeNames!(ctx);
-    const { sequences, zwj } = await this.sequences!(ctx);
-    const metadata = await this.metadata!(ctx);
-    const variations = await this.variations!(ctx);
+    // const { sequences, zwj } = await this.sequences!(ctx);
+    // const metadata = await this.metadata!(ctx);
+    // const variations = await this.variations!(ctx);
 
-    const emojis: Record<string, Emoji> = {};
+    const emojis: Record<string, Record<string, Record<string, Emoji>>> = {};
 
     const emojiData = await fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-data.txt`, {
       cacheKey: `v${ctx.emojiVersion}/emoji-data.json`,
@@ -139,13 +139,10 @@ export default defineMojiAdapter({
       bypassCache: ctx.force,
     });
 
-    // join names, metadata, variations, sequences, zwj
-
-    for (const [hex, data] of Object.entries(emojiData)) {
-
-    }
-
-    return {};
+    return {
+      emojiData,
+      emojis,
+    };
   },
   variations: async (ctx) => {
     return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-variation-sequences.txt`, {

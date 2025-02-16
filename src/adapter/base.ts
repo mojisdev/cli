@@ -1,4 +1,4 @@
-import type { EmojiGroup, EmojiMetadata, EmojiShortcode, ShortcodeProvider } from "../types";
+import type { Emoji, EmojiGroup, EmojiMetadata, EmojiShortcode, ShortcodeProvider } from "../types";
 import consola from "consola";
 import { red, yellow } from "farver/fast";
 import { defineMojiAdapter, MojisNotImplemented } from "../adapter";
@@ -157,13 +157,23 @@ export default defineMojiAdapter({
       throw new MojisNotImplemented("emojis");
     }
 
-    const emojis = await this.emojis(ctx);
+    const { emojis } = await this.emojis(ctx);
+
+    const flattenedEmojis = Object.values(emojis).reduce((acc, subgroup) => {
+      for (const hexcodes of Object.values(subgroup)) {
+        for (const [hexcode, emoji] of Object.entries(hexcodes)) {
+          acc[hexcode] = emoji;
+        }
+      }
+
+      return acc;
+    }, {} as Record<string, Emoji>);
 
     if (providers.includes("github")) {
       const githubShortcodesFn = await import("../shortcode/github").then((m) => m.generateGitHubShortcodes);
 
       shortcodes.github = await githubShortcodesFn({
-        emojis,
+        emojis: flattenedEmojis,
         force: ctx.force,
         version: ctx.emojiVersion,
       });
