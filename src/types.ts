@@ -1,3 +1,6 @@
+import type { InferInput } from "valibot";
+import type { SHORTCODE_PROVIDER_SCHEMA } from "./schemas";
+
 export interface EmojiGroup {
   name: string;
   slug: string;
@@ -16,6 +19,8 @@ export interface Emoji {
 export interface EmojiComponent {
 
 }
+
+export type ShortcodeProvider = InferInput<typeof SHORTCODE_PROVIDER_SCHEMA>;
 
 export interface EmojiMetadata {
   group: string;
