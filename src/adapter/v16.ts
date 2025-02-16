@@ -13,12 +13,12 @@ export default defineMojiAdapter({
   sequences: async (ctx) => {
     const [sequences, zwj] = await Promise.all([
       {
-        cacheKey: `v${ctx.version}/sequences.json`,
-        url: `https://unicode.org/Public/emoji/${ctx.version}/emoji-sequences.txt`,
+        cacheKey: `v${ctx.emojiVersion}/sequences.json`,
+        url: `https://unicode.org/Public/emoji/${ctx.emojiVersion}/emoji-sequences.txt`,
       },
       {
-        cacheKey: `v${ctx.version}/zwj-sequences.json`,
-        url: `https://unicode.org/Public/emoji/${ctx.version}/emoji-zwj-sequences.txt`,
+        cacheKey: `v${ctx.emojiVersion}/zwj-sequences.json`,
+        url: `https://unicode.org/Public/emoji/${ctx.emojiVersion}/emoji-zwj-sequences.txt`,
       },
     ].map(async ({ cacheKey, url }) => {
       return await fetchCache(url, {
@@ -70,8 +70,8 @@ export default defineMojiAdapter({
     };
   },
   async emojis(ctx) {
-    const emojiData = await fetchCache(`https://unicode.org/Public/${ctx.version}.0/ucd/emoji/emoji-data.txt`, {
-      cacheKey: `v${ctx.version}/emoji-data.json`,
+    const emojiData = await fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-data.txt`, {
+      cacheKey: `v${ctx.emojiVersion}/emoji-data.json`,
       parser(data) {
         const lines = data.split("\n");
 
@@ -110,8 +110,7 @@ export default defineMojiAdapter({
             hexcode: "",
             gender: null,
             properties: [(property as Property) || "Emoji"],
-            // TODO: use correct unicode version
-            unicodeVersion: extractUnicodeVersion(emojiVersion, "16.0"),
+            unicodeVersion: extractUnicodeVersion(emojiVersion, ctx.unicodeVersion),
             emojiVersion,
           };
 
@@ -135,8 +134,8 @@ export default defineMojiAdapter({
     return emojiData;
   },
   variations: async (ctx) => {
-    return fetchCache(`https://unicode.org/Public/${ctx.version}.0/ucd/emoji/emoji-variation-sequences.txt`, {
-      cacheKey: `v${ctx.version}/variations.json`,
+    return fetchCache(`https://unicode.org/Public/${ctx.emojiVersion}.0/ucd/emoji/emoji-variation-sequences.txt`, {
+      cacheKey: `v${ctx.emojiVersion}/variations.json`,
       parser(data) {
         const lines = data.split("\n");
 

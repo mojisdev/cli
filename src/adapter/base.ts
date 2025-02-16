@@ -16,16 +16,16 @@ export default defineMojiAdapter({
   description: "base adapter",
   range: "*",
   metadata: async (ctx) => {
-    if (ctx.version === "1.0" || ctx.version === "2.0" || ctx.version === "3.0") {
-      console.warn(`version ${ctx.version} does not have group data`);
+    if (ctx.emojiVersion === "1.0" || ctx.emojiVersion === "2.0" || ctx.emojiVersion === "3.0") {
+      console.warn(`version ${ctx.emojiVersion} does not have group data`);
       return {
         groups: [],
         emojiMetadata: {},
       };
     }
 
-    return fetchCache(`https://unicode.org/Public/emoji/${ctx.version}/emoji-test.txt`, {
-      cacheKey: `v${ctx.version}/metadata.json`,
+    return fetchCache(`https://unicode.org/Public/emoji/${ctx.emojiVersion}/emoji-test.txt`, {
+      cacheKey: `v${ctx.emojiVersion}/metadata.json`,
       parser(data) {
         const lines = data.split("\n");
         let currentGroup: EmojiGroup | undefined;
@@ -100,8 +100,7 @@ export default defineMojiAdapter({
             subgroup: subgroupName,
             qualifier,
             emojiVersion: emojiVersion || null,
-            // TODO: use correct unicode version
-            unicodeVersion: extractUnicodeVersion(emojiVersion, "16.0"),
+            unicodeVersion: extractUnicodeVersion(emojiVersion, ctx.unicodeVersion),
             description: trimmedComment || "",
             emoji: emoji || null,
             hexcodes: hexcode.split("-"),

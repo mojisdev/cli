@@ -43,7 +43,8 @@ export interface MojiAdapter {
 }
 
 export interface BaseAdapterContext {
-  version: string;
+  emojiVersion: string;
+  unicodeVersion: string;
   force: boolean;
 }
 

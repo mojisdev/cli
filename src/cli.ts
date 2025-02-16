@@ -6,7 +6,7 @@ import yargs, { type Argv } from "yargs";
 import pkg from "../package.json" with { type: "json" };
 import { resolveAdapter } from "./adapters";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
-import { getAllEmojiVersions } from "./utils";
+import { extractUnicodeVersion, getAllEmojiVersions, getUnicodeVersionByEmojiVersion } from "./utils";
 import { isNotImplementedError } from "./utils/errors";
 import { readLockfile, writeLockfile } from "./utils/lockfile";
 
@@ -54,7 +54,7 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const emojis = await adapter.emojis!({ version, force });
+      const emojis = await adapter.emojis!({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
 
       await fs.ensureDir(`./data/v${version}`);
       return fs.writeFile(
@@ -114,7 +114,7 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const variations = await adapter.variations!({ version, force });
+      const variations = await adapter.variations!({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
 
       await fs.ensureDir(`./data/v${version}`);
       return fs.writeFile(
@@ -174,7 +174,7 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const { sequences, zwj } = await adapter.sequences!({ version, force });
+      const { sequences, zwj } = await adapter.sequences!({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
 
       await fs.ensureDir(`./data/v${version}`);
       await fs.writeFile(
@@ -239,7 +239,7 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const { groups, emojiMetadata } = await adapter.metadata!({ version, force });
+      const { groups, emojiMetadata } = await adapter.metadata!({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
 
       await fs.ensureDir(`./data/v${version}/metadata`);
 
