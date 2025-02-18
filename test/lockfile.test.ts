@@ -1,7 +1,7 @@
 import fs from "fs-extra";
 import { describe, expect, it } from "vitest";
 import { testdir } from "vitest-testdirs";
-import { type EmojiLockfile, hasLockfile, readLockfile, writeLockfile } from "../../src/utils/lockfile";
+import { type EmojiLockfile, hasLockfile, readLockfile, writeLockfile } from "../src/lockfile";
 
 describe("hasLockfile", () => {
   it("should return true when lockfile exists", async () => {
