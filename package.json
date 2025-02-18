@@ -7,7 +7,7 @@
     "email": "lucasnrgaard@gmail.com",
     "url": "https://luxass.dev"
   },
-  "packageManager": "pnpm@10.4.0",
+  "packageManager": "pnpm@10.4.1",
   "license": "MIT",
   "homepage": "https://github.com/mojisdev/cli",
   "repository": {
@@ -37,7 +37,7 @@
     "farver": "^0.4.0",
     "fs-extra": "^11.3.0",
     "semver": "^7.7.1",
-    "valibot": "1.0.0-rc.0",
+    "valibot": "1.0.0-rc.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
@@ -57,6 +57,7 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
+      "esbuild",
       "msw"
     ]
   }
