@@ -53,8 +53,8 @@ export async function getCurrentDraftVersion(): Promise<DraftVersion | null> {
   const draftText = rootResult.value;
   const emojiText = emojiResult.value;
 
-  const rootVersion = extractVersion(draftText);
-  const emojiVersion = extractVersion(emojiText);
+  const rootVersion = extractVersionFromReadme(draftText);
+  const emojiVersion = extractVersionFromReadme(emojiText);
 
   if (rootVersion == null || emojiVersion == null) {
     throw new Error("failed to extract draft version");
@@ -105,12 +105,12 @@ export function extractEmojiVersion(comment: string): string | null {
  *
  * @example
  * ```ts
- * extractVersion("Version 15.0.0 of the Unicode Standard") // Returns "15.0.0"
- * extractVersion("Unicode15.1") // Returns "15.1"
- * extractVersion("No version here") // Returns null
+ * extractVersionFromReadme("Version 15.0.0 of the Unicode Standard") // Returns "15.0.0"
+ * extractVersionFromReadme("Unicode15.1") // Returns "15.1"
+ * extractVersionFromReadme("No version here") // Returns null
  * ```
  */
-export function extractVersion(text: string): string | null {
+export function extractVersionFromReadme(text: string): string | null {
   const patterns = [
     /Version (\d+\.\d+(?:\.\d+)?) of the Unicode Standard/, // Most explicit
     /Unicode(\d+\.\d+(?:\.\d+)?)/, // From URLs

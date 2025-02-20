@@ -1,6 +1,6 @@
 import fs from "fs-extra";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { extractEmojiVersion, extractVersion, getCurrentDraftVersion } from "./versions";
+import { extractEmojiVersion, extractVersionFromReadme, getCurrentDraftVersion } from "./versions";
 
 describe("getCurrentDraftVersion", () => {
   beforeEach(() => {
@@ -70,7 +70,7 @@ describe("extract version", () => {
     { input: "Version 15.0 of the Unicode Standard", expected: "15.0" },
     { input: "Version 5.0 of the Unicode Standard", expected: "5.0" },
   ])("should extract valid version numbers (input: $input, expected: $expected)", ({ input, expected }) => {
-    expect(extractVersion(input)).toBe(expected);
+    expect(extractVersionFromReadme(input)).toBe(expected);
   });
 
   it.each([
@@ -79,7 +79,7 @@ describe("extract version", () => {
     { input: "Version 15", expected: null },
     { input: "", expected: null },
   ])("should return null for invalid formats (input: $input, expected: $expected)", ({ input, expected }) => {
-    expect(extractVersion(input)).toBe(expected);
+    expect(extractVersionFromReadme(input)).toBe(expected);
   });
 
   describe.each([
@@ -92,7 +92,7 @@ describe("extract version", () => {
   ])("extract version from $name", ({ path, version }) => {
     it("should extract version from file path", () => {
       const content = fs.readFileSync(`./test/fixtures/extract-version/${path}`, "utf-8");
-      expect(extractVersion(content)).toBe(version);
+      expect(extractVersionFromReadme(content)).toBe(version);
     });
   });
 
