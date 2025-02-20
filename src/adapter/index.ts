@@ -1,4 +1,4 @@
-import type { EmojiGroup, EmojiSequence, EmojiVariation } from "../types";
+import type { Emoji, EmojiData, EmojiGroup, EmojiMetadata, EmojiSequence, EmojiShortcode, EmojiVariation, ShortcodeProvider } from "../types";
 import semver from "semver";
 
 export interface MojiAdapter {
@@ -23,11 +23,6 @@ export interface MojiAdapter {
   extend?: string;
 
   /**
-   * A function to generate the emoji groups for the specified version.
-   */
-  groups?: GroupFn;
-
-  /**
    * A function to generate the emoji sequences for the specified version
    */
   sequences?: SequenceFn;
@@ -41,17 +36,35 @@ export interface MojiAdapter {
    * A function to generate emoji variations for the specified version.
    */
   variations?: EmojiVariationFn;
+
+  shortcodes?: ShortcodeFn;
+
+  metadata?: MetadataFn;
+
+  unicodeNames?: UnicodeNamesFn;
 }
 
 export interface BaseAdapterContext {
-  version: string;
+  emojiVersion: string;
+  unicodeVersion: string;
   force: boolean;
 }
 
-export type GroupFn = (ctx: BaseAdapterContext) => Promise<EmojiGroup[]>;
+export type UnicodeNamesFn = (ctx: BaseAdapterContext) => Promise<Record<string, string>>;
 export type SequenceFn = (ctx: BaseAdapterContext) => Promise<{ zwj: EmojiSequence[]; sequences: EmojiSequence[] }>;
-export type EmojiFn = (ctx: BaseAdapterContext) => Promise<any>;
+export type EmojiFn = (ctx: BaseAdapterContext) => Promise<{
+  emojiData: Record<string, EmojiData>;
+  // group: subgroup: hexcode: emoji
+  emojis: Record<string, Record<string, Record<string, Emoji>>>;
+}>;
 export type EmojiVariationFn = (ctx: BaseAdapterContext) => Promise<EmojiVariation[]>;
+export type ShortcodeFn = (ctx: BaseAdapterContext & {
+  providers: ShortcodeProvider[];
+}) => Promise<Partial<Record<ShortcodeProvider, EmojiShortcode[]>>>;
+export type MetadataFn = (ctx: BaseAdapterContext) => Promise<{
+  groups: EmojiGroup[];
+  emojiMetadata: Record<string, Record<string, EmojiMetadata>>;
+}>;
 
 export const ADAPTERS = new Map<string, MojiAdapter>();
 
@@ -81,4 +94,11 @@ export function defineMojiAdapter(adapter: MojiAdapter): MojiAdapter {
   ADAPTERS.set(adapter.name, adapter);
 
   return adapter;
+}
+
+export class MojisNotImplemented extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "MojisNotImplemented";
+  }
 }

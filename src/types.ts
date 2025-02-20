@@ -1,3 +1,6 @@
+import type { InferInput } from "valibot";
+import type { SHORTCODE_PROVIDER_SCHEMA } from "./schemas";
+
 export interface EmojiGroup {
   name: string;
   slug: string;
@@ -7,14 +10,32 @@ export interface EmojiGroup {
 export interface Emoji {
   name: string;
   slug: string;
-  components: EmojiComponent[];
-  hexcode: string;
-  type: "ZWJ" | "SINGLE";
+  code: string;
+  hexcodes: string[];
+  shortcodes: EmojiShortcode[];
 }
 
-// eslint-disable-next-line ts/no-empty-object-type
-export interface EmojiComponent {
+export type ShortcodeProvider = InferInput<typeof SHORTCODE_PROVIDER_SCHEMA>;
 
+export interface EmojiMetadata {
+  group: string;
+  subgroup: string;
+  qualifier: string;
+  unicodeVersion: string | null;
+  emojiVersion: string | null;
+  description: string;
+  emoji: string | null;
+  hexcodes: string[];
+}
+
+export interface EmojiData {
+  description: string;
+  gender: string | null;
+  hexcode: string;
+  properties: Property[];
+  unicodeVersion: string | null;
+  emojiVersion: string | null;
+  name: string;
 }
 
 export interface EmojiShortcode {

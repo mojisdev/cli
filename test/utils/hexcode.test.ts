@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expandHexRange, fromHexToCodepoint } from "../../src/utils/hexcode";
+import { expandHexRange, fromHexToCodepoint, stripHex } from "../../src/utils/hexcode";
 
 describe("fromHexToCodepoint", () => {
   it("should convert hex string with hyphens to codepoints", () => {
@@ -34,5 +34,31 @@ describe("expandHexRange", () => {
 
   it("should expand larger hex ranges", () => {
     expect(expandHexRange("1F600..1F602")).toEqual(["1F600", "1F601", "1F602"]);
+  });
+});
+
+describe("stripHex", () => {
+  it("should remove zero width joiner (200D)", () => {
+    expect(stripHex("1F468-200D-1F469")).toBe("1F468-1F469");
+  });
+
+  it("should remove text style selector (FE0E)", () => {
+    expect(stripHex("2764-FE0E")).toBe("2764");
+  });
+
+  it("should remove emoji style selector (FE0F)", () => {
+    expect(stripHex("2764-FE0F")).toBe("2764");
+  });
+
+  it("should remove multiple variation selectors", () => {
+    expect(stripHex("1F468-200D-2764-FE0F-200D-1F468")).toBe("1F468-2764-1F468");
+  });
+
+  it("should handle string without variation selectors", () => {
+    expect(stripHex("1F600")).toBe("1F600");
+  });
+
+  it("should handle space-separated values", () => {
+    expect(stripHex("1F468 200D 1F469")).toBe("1F468 1F469");
   });
 });

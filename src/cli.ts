@@ -1,13 +1,17 @@
 import process from "node:process";
+import consola from "consola";
 import { green, red, yellow } from "farver/fast";
 import fs from "fs-extra";
 import semver from "semver";
+import { type InferInput, parseAsync } from "valibot";
 import yargs, { type Argv } from "yargs";
 import pkg from "../package.json" with { type: "json" };
+import { MojisNotImplemented } from "./adapter";
 import { resolveAdapter } from "./adapters";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
-import { getAllEmojiVersions } from "./utils";
-import { readLockfile, writeLockfile } from "./utils/lockfile";
+import { readLockfile, writeLockfile } from "./lockfile";
+import { SHORTCODE_PROVIDERS_SCHEMA } from "./schemas";
+import { getAllEmojiVersions, getUnicodeVersionByEmojiVersion } from "./utils";
 
 const cli = yargs(process.argv.slice(2))
   .scriptName("mojis")
@@ -20,25 +24,43 @@ const cli = yargs(process.argv.slice(2))
   .demandCommand(1, "");
 
 cli.command(
-  "generate:sequences <versions...>",
-  "Generate emoji sequences for the specified versions",
+  "generate <versions...>",
+  "generate emoji data for the specified versions",
   (args) => commonOptions(args)
     .positional("versions", {
       type: "string",
       description: "emoji versions to generate",
     })
+    .option("generators", {
+      type: "array",
+      description: "generators to use",
+      default: ["metadata", "sequences", "variations", "emojis", "shortcodes"],
+    })
+    .option("shortcode-providers", {
+      type: "array",
+      description: "shortcode providers to use",
+      default: ["github"] satisfies InferInput<typeof SHORTCODE_PROVIDERS_SCHEMA>,
+    })
     .strict().help(),
   async (args) => {
     const force = args.force ?? false;
     const versions = Array.isArray(args.versions) ? args.versions : [args.versions];
+    const generators = Array.isArray(args.generators) ? args.generators : [args.generators];
 
-    if (SUPPORTED_EMOJI_VERSIONS.every((v) => !versions.includes(v))) {
-      console.error(red("error:"), "unsupported emoji versions");
-      console.log("supported versions:", SUPPORTED_EMOJI_VERSIONS.join(", "));
+    function isGeneratorEnabled(generator: string) {
+      return generators.includes(generator);
+    }
+
+    const unsupported = versions.filter((v) => !SUPPORTED_EMOJI_VERSIONS.includes(v));
+
+    // require that all versions are supported, otherwise exit
+    if (unsupported.length > 0) {
+      consola.error(`version(s) ${unsupported.map((v) => yellow(v)).join(", ")} is not supported`);
       process.exit(1);
     }
 
-    console.log("generating emoji group data for versions", versions.map((v) => yellow(v)).join(", "));
+    consola.info("generating emoji data for versions", versions.map((v) => yellow(v)).join(", "));
+    consola.info(`using the following generators ${args.generators.map((g) => yellow(g)).join(", ")}`);
 
     const promises = versions.map(async (version) => {
       const coerced = semver.coerce(version);
@@ -53,86 +75,140 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
-      const { sequences, zwj } = await adapter.sequences!({ version, force });
+      if (isGeneratorEnabled("metadata")) {
+        if (adapter.metadata == null) {
+          throw new MojisNotImplemented("metadata");
+        }
 
-      await fs.ensureDir(`./data/v${version}`);
-      await fs.writeFile(
-        `./data/v${version}/zwj-sequences.json`,
-        JSON.stringify(zwj, null, 2),
-        "utf-8",
-      );
-      return fs.writeFile(
-        `./data/v${version}/sequences.json`,
-        JSON.stringify(sequences, null, 2),
-        "utf-8",
-      );
+        const { groups, emojiMetadata } = await adapter.metadata({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+
+        await fs.ensureDir(`./data/v${version}/metadata`);
+
+        await fs.writeFile(
+          `./data/v${version}/groups.json`,
+          JSON.stringify(groups, null, 2),
+          "utf-8",
+        );
+
+        await Promise.all(Object.entries(emojiMetadata).map(([group, metadata]) => fs.writeFile(
+          `./data/v${version}/metadata/${group}.json`,
+          JSON.stringify(metadata, null, 2),
+          "utf-8",
+        )));
+      }
+
+      if (isGeneratorEnabled("sequences")) {
+        if (adapter.sequences == null) {
+          throw new MojisNotImplemented("sequences");
+        }
+
+        const { sequences, zwj } = await adapter.sequences({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+
+        await fs.ensureDir(`./data/v${version}`);
+
+        await fs.writeFile(
+          `./data/v${version}/zwj-sequences.json`,
+          JSON.stringify(zwj, null, 2),
+          "utf-8",
+        );
+
+        await fs.writeFile(
+          `./data/v${version}/sequences.json`,
+          JSON.stringify(sequences, null, 2),
+          "utf-8",
+        );
+      }
+
+      if (isGeneratorEnabled("variations")) {
+        if (adapter.variations == null) {
+          throw new MojisNotImplemented("variations");
+        }
+
+        const variations = await adapter.variations({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+
+        await fs.ensureDir(`./data/v${version}`);
+        await fs.writeFile(
+          `./data/v${version}/variations.json`,
+          JSON.stringify(variations, null, 2),
+          "utf-8",
+        );
+      }
+
+      if (isGeneratorEnabled("emojis")) {
+        if (adapter.emojis == null) {
+          throw new MojisNotImplemented("emojis");
+        }
+
+        const { emojiData, emojis } = await adapter.emojis({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+
+        await fs.ensureDir(`./data/v${version}`);
+
+        await fs.writeFile(
+          `./data/v${version}/emoji-data.json`,
+          JSON.stringify(emojiData, null, 2),
+          "utf-8",
+        );
+
+        for (const [group, subgroup] of Object.entries(emojis)) {
+          await fs.ensureDir(`./data/v${version}/emojis/${group}`);
+
+          for (const hexcodes of Object.values(subgroup)) {
+            await fs.ensureDir(`./data/v${version}/emojis/${group}/${subgroup}`);
+
+            for (const [hexcode, emoji] of Object.entries(hexcodes)) {
+              await fs.writeFile(
+                `./data/v${version}/emojis/${group}/${subgroup}/${hexcode}.json`,
+                JSON.stringify(emoji, null, 2),
+                "utf-8",
+              );
+            }
+          }
+        }
+      }
+
+      if (isGeneratorEnabled("shortcodes")) {
+        const providers = await parseAsync(SHORTCODE_PROVIDERS_SCHEMA, args["shortcode-providers"]);
+
+        if (providers.length === 0) {
+          throw new Error("no shortcode providers specified");
+        }
+
+        if (adapter.shortcodes == null) {
+          throw new MojisNotImplemented("shortcodes");
+        }
+
+        const shortcodes = await adapter.shortcodes({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)!, providers });
+
+        await fs.ensureDir(`./data/v${version}/shortcodes`);
+
+        for (const provider of providers) {
+          if (shortcodes[provider] == null) {
+            consola.warn(`no shortcodes found for provider ${provider}`);
+            continue;
+          }
+
+          await fs.writeFile(
+            `./data/v${version}/shortcodes/${provider}.json`,
+            JSON.stringify(shortcodes[provider], null, 2),
+            "utf-8",
+          );
+        }
+      }
     });
 
     const results = await Promise.allSettled(promises);
 
     for (const result of results) {
       if (result.status === "rejected") {
-        console.error(red("error:"), result.reason);
+        if (result.reason instanceof MojisNotImplemented) {
+          consola.warn(result.reason.message);
+          continue;
+        }
+        consola.error(result.reason);
       }
     }
 
-    console.log(green("done"));
-  },
-);
-
-cli.command(
-  "generate:groups <versions...>",
-  "Generate emoji group data for the specified versions",
-  (args) => commonOptions(args)
-    .positional("versions", {
-      type: "string",
-      description: "emoji versions to generate",
-    })
-    .strict().help(),
-  async (args) => {
-    const force = args.force ?? false;
-    const versions = Array.isArray(args.versions) ? args.versions : [args.versions];
-
-    if (SUPPORTED_EMOJI_VERSIONS.every((v) => !versions.includes(v))) {
-      console.error(red("error:"), "unsupported emoji versions");
-      console.log("supported versions:", SUPPORTED_EMOJI_VERSIONS.join(", "));
-      process.exit(1);
-    }
-
-    console.log("generating emoji group data for versions", versions.map((v) => yellow(v)).join(", "));
-
-    const promises = versions.map(async (version) => {
-      const coerced = semver.coerce(version);
-
-      if (coerced == null) {
-        throw new Error(`invalid version ${version}`);
-      }
-
-      const adapter = resolveAdapter(coerced.version);
-
-      if (adapter == null) {
-        throw new Error(`no adapter found for version ${version}`);
-      }
-
-      const groups = await adapter.groups!({ version, force });
-
-      await fs.ensureDir(`./data/v${version}`);
-      return fs.writeFile(
-        `./data/v${version}/groups.json`,
-        JSON.stringify(groups, null, 2),
-        "utf-8",
-      );
-    });
-
-    const results = await Promise.allSettled(promises);
-
-    for (const result of results) {
-      if (result.status === "rejected") {
-        console.error(red("error:"), result.reason);
-      }
-    }
-
-    console.log(green("done"));
+    consola.info(green("done"));
   },
 );
 
@@ -151,7 +227,7 @@ cli.command(
 
     const latest = versions[0];
 
-    console.log("latest emoji version:", yellow(latest?.emoji_version));
+    consola.log("latest emoji version:", yellow(latest?.emoji_version));
 
     if (args.writeLockfile) {
       const lockfile = await readLockfile();
@@ -159,7 +235,7 @@ cli.command(
       lockfile.latestVersion = latest?.emoji_version;
 
       await writeLockfile(lockfile);
-      console.log(`updated ${yellow("emojis.lock")}`);
+      consola.log(`updated ${yellow("emojis.lock")}`);
     }
   },
 );
@@ -176,8 +252,8 @@ cli.command(
   async (args) => {
     const versions = await getAllEmojiVersions();
 
-    console.log("all available versions:");
-    console.log(versions.map((v) => `${yellow(v.emoji_version)}${v.draft ? ` ${red("(draft)")}` : ""}`).join(", "));
+    consola.log("all available versions:");
+    consola.log(versions.map((v) => `${yellow(v.emoji_version)}${v.draft ? ` ${red("(draft)")}` : ""}`).join(", "));
 
     if (args.writeLockfile) {
       const lockfile = await readLockfile();
@@ -185,7 +261,7 @@ cli.command(
       lockfile.versions = Array.from(versions);
 
       await writeLockfile(lockfile);
-      console.log(`updated ${yellow("emojis.lock")}`);
+      consola.log(`updated ${yellow("emojis.lock")}`);
     }
   },
 );
