@@ -1,7 +1,5 @@
-import type { EmojiVersion } from "./lockfile";
 import consola from "consola";
 import semver from "semver";
-import { NO_EMOJI_VERSIONS } from "./constants";
 
 export interface DraftVersion {
   emoji_version: string;
