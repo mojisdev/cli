@@ -1,6 +1,6 @@
 import fs from "fs-extra";
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { extractEmojiVersion, extractVersionFromReadme, getAllEmojiVersions, getCurrentDraftVersion } from "../src/versions";
+import { describe, expect, it } from "vitest";
+import { extractEmojiVersion, extractVersionFromReadme, getCurrentDraftVersion } from "../src/versions";
 
 describe("get draft version", () => {
   it("returns draft versions when fetches succeed and versions match", async () => {

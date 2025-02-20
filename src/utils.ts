@@ -1,8 +1,5 @@
-import type { EmojiVersion } from "./lockfile";
-import consola from "consola";
 import semver from "semver";
 import { NO_EMOJI_VERSIONS } from "./constants";
-import { getCurrentDraftVersion } from "./versions";
 
 /**
  * Converts a string to a URL-friendly slug.
