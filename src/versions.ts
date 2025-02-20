@@ -1,5 +1,7 @@
+import type { EmojiVersion } from "./lockfile";
 import consola from "consola";
 import semver from "semver";
+import { isEmojiVersionValid } from "./utils";
 
 export interface DraftVersion {
   emoji_version: string;
@@ -166,4 +168,135 @@ export function extractUnicodeVersion(emojiVersion: string | null, unicodeVersio
       // v6 is the first unicode spec emojis appeared in
       return "6.0";
   }
+}
+
+/**
+ * Retrieves all available emoji versions from Unicode.org.
+ * This function fetches both the root Unicode directory and the emoji-specific directory
+ * to compile a comprehensive list of valid emoji versions.
+ *
+ * The function performs the following steps:
+ * 1. Fetches content from Unicode.org's public directories
+ * 2. Extracts version numbers using regex
+ * 3. Validates each version
+ * 4. Normalizes version numbers to valid semver format
+ *
+ * @throws {Error} When either the root or emoji page fetch fails
+ * @returns {Promise<EmojiVersion[]>} A promise that resolves to an array of emoji versions,
+ *                             sorted according to semver rules
+ */
+export async function getAllEmojiVersions(): Promise<EmojiVersion[]> {
+  const [rootResult, emojiResult] = await Promise.allSettled([
+    "https://unicode.org/Public/",
+    "https://unicode.org/Public/emoji/",
+  ].map(async (url) => {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+      throw new Error(`failed to fetch ${url}: ${res.statusText}`);
+    }
+
+    return res.text();
+  }));
+
+  if (rootResult == null || emojiResult == null) {
+    throw new Error("failed to fetch root or emoji page");
+  }
+
+  if (rootResult.status === "rejected" || emojiResult.status === "rejected") {
+    consola.error({
+      root: rootResult.status === "rejected" ? rootResult.reason : "ok",
+      emoji: emojiResult.status === "rejected" ? emojiResult.reason : "ok",
+    });
+
+    throw new Error("failed to fetch root or emoji page");
+  }
+
+  const rootHtml = rootResult.value;
+  const emojiHtml = emojiResult.value;
+
+  const versionRegex = /href="(\d+\.\d+(?:\.\d+)?)\/?"/g;
+
+  const draft = await getCurrentDraftVersion();
+
+  if (draft == null) {
+    throw new Error("failed to fetch draft version");
+  }
+
+  const versions: EmojiVersion[] = [];
+
+  for (const match of rootHtml.matchAll(versionRegex)) {
+    if (match == null || match[1] == null) continue;
+
+    const version = match[1];
+
+    if (!await isEmojiVersionValid(version)) {
+      continue;
+    }
+
+    if (versions.some((v) => v.unicode_version === version)) {
+      continue;
+    }
+
+    versions.push({
+      emoji_version: null,
+      unicode_version: version,
+      draft: version === draft.unicode_version || version === draft.emoji_version,
+    });
+  }
+
+  for (const match of emojiHtml.matchAll(versionRegex)) {
+    if (match == null || match[1] == null) continue;
+
+    let version = match[1];
+
+    // for the emoji page, the versions is not valid semver.
+    // so we will add the last 0 to the version.
+    // handle both 5.0 and 12.0 -> 5.0.0 and 12.0.0
+    if (version.length === 3 || version.length === 4) {
+      version += ".0";
+    }
+
+    if (!await isEmojiVersionValid(version)) {
+      continue;
+    }
+
+    // check if the unicode_version already exists.
+    // if it does, we will update the emoji version.
+    const existing = versions.find((v) => v.unicode_version === version);
+
+    let unicode_version = null;
+
+    // the emoji version 13.1 is using the unicode
+    // 13.0, since it was never released.
+    if (match[1] === "13.1") {
+      unicode_version = "13.0.0";
+    }
+
+    if (match[1] === "5.0") {
+      unicode_version = "10.0.0";
+    }
+
+    if (match[1] === "4.0" || match[1] === "3.0") {
+      unicode_version = "9.0.0";
+    }
+
+    if (match[1] === "2.0" || match[1] === "1.0") {
+      unicode_version = "8.0.0";
+    }
+
+    if (existing) {
+      existing.unicode_version = unicode_version || existing.unicode_version;
+      existing.emoji_version = match[1];
+      continue;
+    }
+
+    versions.push({
+      emoji_version: match[1],
+      unicode_version,
+      draft: version === draft.unicode_version || version === draft.emoji_version,
+    });
+  }
+
+  return versions.sort((a, b) => semver.compare(`${b.emoji_version}.0`, `${a.emoji_version}.0`));
 }
