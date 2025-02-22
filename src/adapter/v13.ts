@@ -1,7 +1,7 @@
 import type { Emoji, EmojiData, EmojiSequence, EmojiVariation, Property } from "../types";
 import { defineMojiAdapter } from "../adapter";
 import { FEMALE_SIGN, MALE_SIGN } from "../constants";
-import { extractEmojiVersion, extractUnicodeVersion } from "../utils";
+import { extractEmojiVersion, extractUnicodeVersion } from "../versions";
 import { fetchCache } from "../utils/cache";
 import { expandHexRange } from "../utils/hexcode";
 

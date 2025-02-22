@@ -11,7 +11,7 @@ import { resolveAdapter } from "./adapters";
 import { SUPPORTED_EMOJI_VERSIONS } from "./constants";
 import { readLockfile, writeLockfile } from "./lockfile";
 import { SHORTCODE_PROVIDERS_SCHEMA } from "./schemas";
-import { getAllEmojiVersions, getUnicodeVersionByEmojiVersion } from "./utils";
+import { getAllEmojiVersions, getUnicodeVersionByEmojiVersion } from "./versions";
 
 const cli = yargs(process.argv.slice(2))
   .scriptName("mojis")
