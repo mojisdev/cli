@@ -12,7 +12,6 @@ const EMOJI_VERSION_SCHEMA = v.object({
 export type EmojiVersion = v.InferInput<typeof EMOJI_VERSION_SCHEMA>;
 
 const LOCKFILE_SCHEMA = v.object({
-  latestVersion: v.optional(v.nullable(v.string())),
   versions: v.array(EMOJI_VERSION_SCHEMA),
 });
 
@@ -20,7 +19,6 @@ export type EmojiLockfile = v.InferInput<typeof LOCKFILE_SCHEMA>;
 
 const DEFAULT_LOCKFILE = {
   versions: [],
-  latestVersion: null,
 } satisfies EmojiLockfile;
 
 /**

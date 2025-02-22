@@ -213,34 +213,6 @@ cli.command(
 );
 
 cli.command(
-  "versions:latest",
-  "Check for the latest emoji versions",
-  (args) => commonOptions(args)
-    .option("write-lockfile", {
-      type: "boolean",
-      default: false,
-      description: "write the latest version to the lockfile",
-    })
-    .strict().help(),
-  async (args) => {
-    const versions = await getAllEmojiVersions();
-
-    const latest = versions[0];
-
-    consola.log("latest emoji version:", yellow(latest?.emoji_version));
-
-    if (args.writeLockfile) {
-      const lockfile = await readLockfile();
-
-      lockfile.latestVersion = latest?.emoji_version;
-
-      await writeLockfile(lockfile);
-      consola.log(`updated ${yellow("emojis.lock")}`);
-    }
-  },
-);
-
-cli.command(
   "versions",
   "Print all emoji versions available",
   (args) => commonOptions(args)
