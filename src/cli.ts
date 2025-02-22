@@ -47,6 +47,13 @@ cli.command(
     const versions = Array.isArray(args.versions) ? args.versions : [args.versions];
     const generators = Array.isArray(args.generators) ? args.generators : [args.generators];
 
+    const lockfile = await readLockfile();
+
+    if (lockfile == null) {
+      consola.error("no lockfile found, run `mojis versions --write-lockfile` to generate one");
+      process.exit(1);
+    }
+
     function isGeneratorEnabled(generator: string) {
       return generators.includes(generator);
     }
@@ -75,12 +82,27 @@ cli.command(
         throw new Error(`no adapter found for version ${version}`);
       }
 
+      const lockfileMetadata = lockfile.versions.find((v) => v.emoji_version === version)?.metadata ?? {
+        emojis: null,
+        metadata: null,
+        sequences: null,
+        shortcodes: null,
+        unicodeNames: null,
+        variations: null,
+        zwj: null,
+      };
+
       if (isGeneratorEnabled("metadata")) {
         if (adapter.metadata == null) {
           throw new MojisNotImplemented("metadata");
         }
 
-        const { groups, emojiMetadata } = await adapter.metadata({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+        const { groups, emojiMetadata } = await adapter.metadata({
+          emojiVersion: version,
+          force,
+          unicodeVersion: getUnicodeVersionByEmojiVersion(version)!,
+          lockfileMetadata,
+        });
 
         await fs.ensureDir(`./data/v${version}/metadata`);
 
@@ -102,7 +124,12 @@ cli.command(
           throw new MojisNotImplemented("sequences");
         }
 
-        const { sequences, zwj } = await adapter.sequences({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+        const { sequences, zwj } = await adapter.sequences({
+          emojiVersion: version,
+          force,
+          unicodeVersion: getUnicodeVersionByEmojiVersion(version)!,
+          lockfileMetadata,
+        });
 
         await fs.ensureDir(`./data/v${version}`);
 
@@ -124,7 +151,12 @@ cli.command(
           throw new MojisNotImplemented("variations");
         }
 
-        const variations = await adapter.variations({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+        const variations = await adapter.variations({
+          emojiVersion: version,
+          force,
+          unicodeVersion: getUnicodeVersionByEmojiVersion(version)!,
+          lockfileMetadata,
+        });
 
         await fs.ensureDir(`./data/v${version}`);
         await fs.writeFile(
@@ -139,7 +171,12 @@ cli.command(
           throw new MojisNotImplemented("emojis");
         }
 
-        const { emojiData, emojis } = await adapter.emojis({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)! });
+        const { emojiData, emojis } = await adapter.emojis({
+          emojiVersion: version,
+          force,
+          unicodeVersion: getUnicodeVersionByEmojiVersion(version)!,
+          lockfileMetadata,
+        });
 
         await fs.ensureDir(`./data/v${version}`);
 
@@ -177,7 +214,13 @@ cli.command(
           throw new MojisNotImplemented("shortcodes");
         }
 
-        const shortcodes = await adapter.shortcodes({ emojiVersion: version, force, unicodeVersion: getUnicodeVersionByEmojiVersion(version)!, providers });
+        const shortcodes = await adapter.shortcodes({
+          emojiVersion: version,
+          force,
+          unicodeVersion: getUnicodeVersionByEmojiVersion(version)!,
+          providers,
+          lockfileMetadata,
+        });
 
         await fs.ensureDir(`./data/v${version}/shortcodes`);
 

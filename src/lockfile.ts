@@ -10,6 +10,7 @@ const EMOJI_VERSION_METADATA_SCHEMA = v.object({
   metadata: v.nullable(v.string()),
   shortcodes: v.nullable(v.string()),
   zwj: v.nullable(v.string()),
+  unicodeNames: v.nullable(v.string()),
 });
 
 const EMOJI_VERSION_SCHEMA = v.object({

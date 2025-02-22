@@ -1,3 +1,4 @@
+import type { EmojiLockfile } from "../lockfile";
 import type { Emoji, EmojiData, EmojiGroup, EmojiMetadata, EmojiSequence, EmojiShortcode, EmojiVariation, ShortcodeProvider } from "../types";
 import semver from "semver";
 
@@ -48,6 +49,7 @@ export interface BaseAdapterContext {
   emojiVersion: string;
   unicodeVersion: string;
   force: boolean;
+  lockfileMetadata: EmojiLockfile["versions"][number]["metadata"];
 }
 
 export type UnicodeNamesFn = (ctx: BaseAdapterContext) => Promise<Record<string, string>>;
