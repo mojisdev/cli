@@ -2,8 +2,9 @@ import type { Emoji, EmojiGroup, EmojiMetadata, EmojiShortcode, ShortcodeProvide
 import consola from "consola";
 import { red, yellow } from "farver/fast";
 import { defineMojiAdapter, MojisNotImplemented } from "../adapter";
-import { extractEmojiVersion, extractUnicodeVersion, slugify } from "../utils";
+import { slugify } from "../utils";
 import { fetchCache } from "../utils/cache";
+import { extractEmojiVersion, extractUnicodeVersion } from "../versions";
 
 function notImplemented(adapterFn: string) {
   return async () => {
