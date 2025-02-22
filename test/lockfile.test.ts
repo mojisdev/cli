@@ -29,9 +29,11 @@ describe("writeLockfile", () => {
         emoji_version: "15.0",
         unicode_version: "15.0",
         draft: false,
+        generated: false,
+        metadata: null,
       }],
-      latestVersion: "15.0",
-    };
+      latest_version: "15.0",
+    } satisfies EmojiLockfile;
 
     await writeLockfile(lockfile, path);
     expect(await fs.exists(`${path}/emojis.lock`)).toBe(true);
@@ -43,7 +45,7 @@ describe("writeLockfile", () => {
       versions: [{
         // @ts-expect-error invalid type for emoji_version
         emoji_version: 123,
-        unicode_version: null,
+        unicode_version: "15.0.0",
         draft: false,
       }],
     } satisfies EmojiLockfile;
@@ -60,9 +62,11 @@ describe("readLockfile", () => {
           emoji_version: "15.0",
           unicode_version: "15.0",
           draft: false,
+          generated: false,
+          metadata: null,
         }],
-        latestVersion: "15.0",
-      }),
+        latest_version: "15.0",
+      } satisfies EmojiLockfile),
     });
 
     const result = await readLockfile(path);
@@ -71,9 +75,12 @@ describe("readLockfile", () => {
         emoji_version: "15.0",
         unicode_version: "15.0",
         draft: false,
+        generated: false,
+        metadata: null,
       }],
-      latestVersion: "15.0",
-    });
+      latest_version: "15.0",
+      updated_at: expect.any(Number),
+    } satisfies EmojiLockfile);
   });
 
   it("should return default lockfile when file does not exist", async () => {
@@ -82,8 +89,9 @@ describe("readLockfile", () => {
     const result = await readLockfile(path);
     expect(result).toEqual({
       versions: [],
-      latestVersion: null,
-    });
+      latest_version: null,
+      updated_at: expect.any(Number),
+    } satisfies EmojiLockfile);
   });
 
   it("should throw error for invalid lockfile content", async () => {
@@ -92,7 +100,7 @@ describe("readLockfile", () => {
         versions: [{
           // @ts-expect-error invalid type for emoji_version
           emoji_version: 123,
-          unicode_version: null,
+          unicode_version: "15.0.0",
           draft: false,
         }],
       } satisfies EmojiLockfile),

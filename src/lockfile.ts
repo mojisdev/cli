@@ -3,22 +3,37 @@ import process from "node:process";
 import fs from "fs-extra";
 import * as v from "valibot";
 
+const EMOJI_VERSION_METADATA_SCHEMA = v.object({
+  emojis: v.nullable(v.string()),
+  sequences: v.nullable(v.string()),
+  variations: v.nullable(v.string()),
+  metadata: v.nullable(v.string()),
+  shortcodes: v.nullable(v.string()),
+  zwj: v.nullable(v.string()),
+});
+
 const EMOJI_VERSION_SCHEMA = v.object({
-  emoji_version: v.nullable(v.string()),
-  unicode_version: v.nullable(v.string()),
+  emoji_version: v.string(),
+  unicode_version: v.string(),
   draft: v.boolean(),
+  generated: v.boolean(),
+  metadata: v.nullable(EMOJI_VERSION_METADATA_SCHEMA),
 });
 
 export type EmojiVersion = v.InferInput<typeof EMOJI_VERSION_SCHEMA>;
 
 const LOCKFILE_SCHEMA = v.object({
+  updated_at: v.optional(v.number(), new Date().getTime()),
+  latest_version: v.optional(v.nullable(v.string())),
   versions: v.array(EMOJI_VERSION_SCHEMA),
 });
 
 export type EmojiLockfile = v.InferInput<typeof LOCKFILE_SCHEMA>;
 
 const DEFAULT_LOCKFILE = {
+  updated_at: new Date().getTime(),
   versions: [],
+  latest_version: null,
 } satisfies EmojiLockfile;
 
 /**
@@ -49,7 +64,9 @@ export async function writeLockfile(lockfile: EmojiLockfile, cwd: string = proce
   const result = await v.safeParseAsync(LOCKFILE_SCHEMA, lockfile);
 
   if (result.success === false) {
-    throw new Error(`invalid lockfile: ${result.issues.join(", ")}`);
+    // if lockfile is invalid, throw an error with the pretty-printed validation errors
+    console.error(result.issues);
+    throw new Error("invalid lockfile");
   }
 
   await fs.writeJSON(path.join(cwd, "emojis.lock"), result.output, { spaces: 2 });

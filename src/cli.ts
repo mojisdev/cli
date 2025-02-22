@@ -228,9 +228,19 @@ cli.command(
     consola.log(versions.map((v) => `${yellow(v.emoji_version)}${v.draft ? ` ${red("(draft)")}` : ""}`).join(", "));
 
     if (args.writeLockfile) {
+      const sortedVersions = versions.filter((v) => !v.draft).sort((a, b) => semver.rcompare(a.unicode_version, b.unicode_version));
+
+      if (sortedVersions.length === 0 || sortedVersions[0] == null) {
+        consola.warn("no stable versions found, skipping lockfile update");
+        return;
+      }
+
+      const latestVersion = sortedVersions[0].emoji_version;
+
       const lockfile = await readLockfile();
 
       lockfile.versions = Array.from(versions);
+      lockfile.latest_version = latestVersion;
 
       await writeLockfile(lockfile);
       consola.log(`updated ${yellow("emojis.lock")}`);

@@ -239,9 +239,11 @@ export async function getAllEmojiVersions(): Promise<EmojiVersion[]> {
     }
 
     versions.push({
-      emoji_version: null,
+      emoji_version: version,
       unicode_version: version,
       draft: version === draft.unicode_version || version === draft.emoji_version,
+      metadata: null,
+      generated: false,
     });
   }
 
@@ -293,8 +295,10 @@ export async function getAllEmojiVersions(): Promise<EmojiVersion[]> {
 
     versions.push({
       emoji_version: match[1],
-      unicode_version,
+      unicode_version: unicode_version || match[1],
       draft: version === draft.unicode_version || version === draft.emoji_version,
+      metadata: null,
+      generated: false,
     });
   }
 
