@@ -1,5 +1,11 @@
 # @mojis/cli
 
+> [!IMPORTANT]
+> We are moved to [mojisdev/mojis](https://github.com/mojisdev/mojis/tree/main/packages/cli)
+
+<br />
+<br />
+
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 
